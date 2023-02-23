@@ -1,3 +1,5 @@
+import networkx as nx
+
 from project import grapth_utils
 
 
@@ -13,3 +15,8 @@ def test_two_cycle_graph():
     assert graph.number_of_nodes() == 14
     assert graph.number_of_edges() == 15
     assert set(grapth_utils.get_labels(graph)) == {"a", "b"}
+
+    filename = "two_cycles_graph.dot"
+    grapth_utils.save_graph_to_dot(graph, filename)
+    graph_from_file = nx.drawing.nx_pydot.read_dot(filename)
+    nx.utils.graphs_equal(graph, graph_from_file)
