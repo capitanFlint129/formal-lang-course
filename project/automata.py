@@ -13,8 +13,7 @@ from typing import Optional, Iterable
 
 def get_deterministic_automata_from_regex(regex: Regex) -> DeterministicFiniteAutomaton:
     nfa = regex.to_epsilon_nfa()
-    dfa = nfa.to_deterministic()
-    dfa_minimum = dfa.minimize()
+    dfa_minimum = nfa.minimize()
     return dfa_minimum
 
 
