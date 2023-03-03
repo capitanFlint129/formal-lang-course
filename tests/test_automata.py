@@ -63,17 +63,6 @@ def test_get_deterministic_automata_from_regex_epsilon():
     assert dfa.is_equivalent_to(minimal_dfa)
 
 
-def test_get_deterministic_automata_from_regex_epsilon():
-    regex = Regex("$")
-    state = State(0)
-    minimal_dfa = DeterministicFiniteAutomaton()
-    minimal_dfa.add_start_state(state)
-    minimal_dfa.add_final_state(state)
-
-    dfa = automata.get_deterministic_automata_from_regex(regex)
-    assert dfa.is_equivalent_to(minimal_dfa)
-
-
 def test_get_deterministic_automata_from_regex_kleene_star():
     regex = Regex("a*")
 
