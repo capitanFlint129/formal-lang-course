@@ -1,5 +1,3 @@
-import networkx as nx
-import pytest
 from pyformlang.regular_expression import Regex
 from pyformlang.finite_automaton import (
     DeterministicFiniteAutomaton,
