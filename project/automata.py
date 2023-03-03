@@ -3,7 +3,7 @@ from pyformlang.finite_automaton import (
     DeterministicFiniteAutomaton,
     NondeterministicFiniteAutomaton,
 )
-from networkx import MultiDiGraph
+import networkx as nx
 
 from typing import Optional, Iterable
 
@@ -35,7 +35,7 @@ def get_deterministic_automata_from_regex(regex: Regex) -> DeterministicFiniteAu
 
 
 def get_nondeterministic_automata_from_graph(
-    graph: MultiDiGraph,
+    graph: nx.MultiDiGraph,
     start_states: Optional[Iterable] = None,
     final_states: Optional[Iterable] = None,
 ) -> NondeterministicFiniteAutomaton:
