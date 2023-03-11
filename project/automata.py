@@ -1,11 +1,11 @@
+from typing import Optional, Iterable
+
 from pyformlang.regular_expression import Regex
 from pyformlang.finite_automaton import (
     DeterministicFiniteAutomaton,
     NondeterministicFiniteAutomaton,
 )
 import networkx as nx
-
-from typing import Optional, Iterable
 
 
 def get_deterministic_automata_from_regex(regex: Regex) -> DeterministicFiniteAutomaton:
@@ -35,7 +35,7 @@ def get_deterministic_automata_from_regex(regex: Regex) -> DeterministicFiniteAu
 
 
 def get_nondeterministic_automata_from_graph(
-    graph: nx.MultiDiGraph,
+    graph: nx.Graph,
     start_states: Optional[Iterable] = None,
     final_states: Optional[Iterable] = None,
 ) -> NondeterministicFiniteAutomaton:
@@ -61,7 +61,7 @@ def get_nondeterministic_automata_from_graph(
     --------
 
     >>> from project import grapth_utils
-    >>> graph = grapth_utils.create_two_cycles_graph(5, 3, ["a", "b"])
+    >>> graph = grapth_utils.create_two_cycles_graph(5, 3, ("a", "b",))
     >>> get_nondeterministic_automata_from_graph(graph, [1, 2, 3], [4, 5])
 
     """

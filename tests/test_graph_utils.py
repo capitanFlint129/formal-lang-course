@@ -11,7 +11,14 @@ def test_get_graph_info():
 
 
 def test_two_cycle_graph():
-    graph = grapth_utils.create_two_cycles_graph(9, 4, ["a", "b"])
+    graph = grapth_utils.create_two_cycles_graph(
+        9,
+        4,
+        (
+            "a",
+            "b",
+        ),
+    )
     assert graph.number_of_nodes() == 14
     assert graph.number_of_edges() == 15
     assert set(grapth_utils.get_labels(graph)) == {"a", "b"}
