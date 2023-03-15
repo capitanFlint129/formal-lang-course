@@ -1,21 +1,7 @@
-from pyformlang.finite_automaton import State
-
-from pyformlang.finite_automaton import NondeterministicFiniteAutomaton, Symbol
 from pyformlang.regular_expression import Regex
-
-from project import all_pairs_rpq, grapth_utils, automata
-
-from collections import defaultdict
-from typing import Iterable, Optional, Union, Any, Sized, Collection
-import math
-
-import numpy as np
-from pyformlang.finite_automaton import NondeterministicFiniteAutomaton, Symbol, State
-from pyformlang.regular_expression import Regex
-from scipy.sparse import dok_matrix, csr_matrix, kron, block_diag, coo_matrix
-import networkx as nx
 import pytest
-from project import automata, multiple_sources_rpq
+
+from project import automata, multiple_sources_rpq, grapth_utils
 from project.all_pairs_rpq import enumerate_states
 from project.boolean_decomposition import *
 

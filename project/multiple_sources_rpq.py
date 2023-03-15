@@ -1,11 +1,7 @@
-from collections import defaultdict
-from typing import Iterable, Optional, Union, Any, Sized, Collection
-import math
+from typing import Optional, Any, Collection
 
-import numpy as np
-from pyformlang.finite_automaton import NondeterministicFiniteAutomaton, Symbol, State
 from pyformlang.regular_expression import Regex
-from scipy.sparse import dok_matrix, csr_matrix, kron, block_diag, coo_matrix
+from scipy.sparse import block_diag
 import networkx as nx
 
 from project import automata
