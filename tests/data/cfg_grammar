@@ -1,0 +1,7 @@
+S -> NP VP PUNC
+PUNC -> . | !
+VP -> V NP
+V -> buys | touches | sees
+NP -> georges | jacques | leo | Det N
+Det -> a | an | the
+N -> gorilla | dog | carrots
