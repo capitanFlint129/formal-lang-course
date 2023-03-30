@@ -49,7 +49,7 @@ def test_read_grammar():
         Det -> a | an | the
         N -> gorilla | dog | carrots"""
     )
-    result = read_grammar_from_file("data/cfg_grammar")
+    result = read_grammar_from_file("tests/data/cfg_grammar")
     assert result.productions == expected.productions
     assert result.start_symbol == expected.start_symbol
     assert result.terminals == expected.terminals

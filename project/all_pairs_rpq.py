@@ -159,6 +159,8 @@ def get_fa_from_boolean_decomposition(
     Creates finite automata from boolean decomposition, start states and final states
     """
     result_fa = NondeterministicFiniteAutomaton()
+    if len(boolean_decomposition) == 0:
+        return result_fa
     states_number = next(iter(boolean_decomposition.values())).shape[0]
     states = [State(i) for i in range(states_number)]
     for state_index in start_states:
