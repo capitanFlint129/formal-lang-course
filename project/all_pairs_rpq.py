@@ -1,13 +1,11 @@
-from collections import defaultdict
-from typing import Iterable, Optional
-import math
+from typing import Optional
 
-from pyformlang.finite_automaton import NondeterministicFiniteAutomaton, Symbol, State
 from pyformlang.regular_expression import Regex
-from scipy.sparse import dok_matrix, csr_matrix, kron
+from scipy.sparse import kron
 import networkx as nx
 
 from project import automata
+from project.boolean_decomposition import *
 
 
 def finite_automata_intersection(
