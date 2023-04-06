@@ -1,14 +1,10 @@
 from collections import defaultdict
-from typing import AbstractSet, Iterable, Tuple, Dict, Any
+from typing import AbstractSet
+import re
 
-from pyformlang.finite_automaton import (
-    NondeterministicFiniteAutomaton,
-    State,
-    Symbol,
-    NondeterministicTransitionFunction,
-)
+from pyformlang.finite_automaton import NondeterministicFiniteAutomaton
 from pyformlang.regular_expression import Regex
-from pyformlang.cfg import CFG, Variable, Terminal, Production
+from pyformlang.cfg import CFG, Variable, Terminal
 
 from project.automata import get_deterministic_automata_from_regex
 from project.weak_chomsky_normal_form import read_grammar_from_file
@@ -143,7 +139,7 @@ class ECFG:
             self.start_symbol,
             {
                 head: get_deterministic_automata_from_regex(body)
-                for head, body in self.productions
+                for head, body in self.productions.items()
             },
         )
 
@@ -173,14 +169,14 @@ class ECFG:
             terminals=cfg.terminals,
             start_symbol=cfg.start_symbol,
             productions={
-                head: Regex(" ".join([var.value for var in body]))
+                head: Regex(" | ".join([re.escape(var.value) for var in body]))
                 for head, body in ecfg_productions.items()
             },
         )
         return ecfg
 
     @classmethod
-    def from_text_cfg(cls, text, start_symbol=Variable("S")) -> "ECFG":
+    def from_text_cfg(cls, text: str, start_symbol: Variable = Variable("S")) -> "ECFG":
         """
         Read a context free grammar from a text and transforms
         it to extended context free grammar
@@ -263,6 +259,8 @@ class ECFG:
         body_text = body_s.strip()
         body = Regex(body_text)
         variables.add(head)
+        regex_cfg = body.to_cfg()
+        terminals.update([t for t in regex_cfg.terminals if str.islower(t.value[0])])
         productions[head] = body
 
     @classmethod
