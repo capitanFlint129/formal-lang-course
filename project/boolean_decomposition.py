@@ -3,7 +3,10 @@ from typing import Iterable
 import math
 
 from pyformlang.finite_automaton import NondeterministicFiniteAutomaton, Symbol, State
+from pyformlang.cfg import Variable
 from scipy.sparse import dok_matrix, csr_matrix
+
+from project.recursive_finite_state_machines import RecursiveFiniteAutomaton
 
 
 def get_boolean_decomposition_of_fa(
@@ -28,6 +31,19 @@ def get_boolean_decomposition_of_fa(
                     states_order_fa[src], states_order_fa[destinations]
                 ] = True
     return result
+
+
+def get_boolean_decomposition_of_rfa(
+    rfa: RecursiveFiniteAutomaton,
+    states_orders_fa: dict[Variable, dict[State, int]],
+) -> dict[Variable, dict[str, dok_matrix]]:
+    """
+    Creates boolean decomposition of recursive finite automata
+    """
+    return {
+        sym: get_boolean_decomposition_of_fa(fa, states_orders_fa[sym])
+        for sym, fa in rfa.symbol_to_fa.items()
+    }
 
 
 def get_fa_from_boolean_decomposition(
