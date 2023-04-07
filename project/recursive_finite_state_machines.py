@@ -39,10 +39,10 @@ class RecursiveFiniteAutomaton:
         rfa :
             RFA with minimized DFA for each variable
         """
-        return RecursiveFiniteAutomaton(
-            start_symbol=self.start_symbol,
-            symbol_to_fa={var: fa.minimize() for var, fa in self.symbol_to_fa.items()},
-        )
+        self.symbol_to_fa = {
+            var: fa.minimize() for var, fa in self.symbol_to_fa.items()
+        }
+        return self
 
     @classmethod
     def from_ecfg(cls, ecfg) -> "RecursiveFiniteAutomaton":
