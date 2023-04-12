@@ -65,8 +65,8 @@ def cf_query_to_graph(
     query: CFG,
     graph: nx.Graph,
     start_nonterminal: Variable,
-    start_states: Iterable[int] = None,
-    final_states: Iterable[int] = None,
+    start_states: Iterable[int],
+    final_states: Iterable[int],
 ) -> set[tuple]:
     return {
         (src, dst)
