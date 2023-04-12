@@ -67,9 +67,9 @@ def cf_query_to_graph(
     start_nonterminal: Variable,
     start_states: Iterable[int] = None,
     final_states: Iterable[int] = None,
-) -> list[tuple]:
-    return [
+) -> set[tuple]:
+    return {
         (src, dst)
         for src, sym, dst in get_reachable_pairs_hellings(graph, query)
         if src in start_states and sym == start_nonterminal and dst in final_states
-    ]
+    }
