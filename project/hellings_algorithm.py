@@ -19,7 +19,8 @@ def get_reachable_pairs_hellings(
     Parameters
     ----------
     graph :
-        The graph on which the request is executed or path to file with text representation of graph
+        The graph on which the request is executed or path to dot file of graph.
+        If a file is passed, then the first graph is taken from it
     cfg :
         Context free grammar of query or path to file with text representation of cfg
 
