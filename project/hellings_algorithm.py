@@ -1,5 +1,6 @@
 import networkx as nx
-from pyformlang.cfg import CFG, Variable, Terminal, Epsilon
+import pydot
+from pyformlang.cfg import CFG, Terminal, Epsilon
 
 from project.boolean_decomposition import *
 from project.weak_chomsky_normal_form import (
@@ -9,7 +10,7 @@ from project.weak_chomsky_normal_form import (
 
 
 def get_reachable_pairs_hellings(
-    graph: nx.Graph,
+    graph: nx.Graph | str,
     cfg: CFG | str,
 ) -> set[tuple]:
     """
@@ -18,9 +19,9 @@ def get_reachable_pairs_hellings(
     Parameters
     ----------
     graph :
-        The graph on which the request is executed
+        The graph on which the request is executed or path to file with text representation of graph
     cfg :
-        Context free grammar of query
+        Context free grammar of query or path to file with text representation of cfg
 
     Returns
     ----------
@@ -28,6 +29,8 @@ def get_reachable_pairs_hellings(
         List of triples of (v, N, u) where v - source vertex, u - destination vertex
         N - non-terminal that allows reaching v from u
     """
+    if isinstance(graph, str):
+        graph = nx.nx_pydot.from_pydot(pydot.graph_from_dot_file(graph)[0])
     if isinstance(cfg, str):
         cfg = read_grammar_from_file(cfg)
     cfg = transform_to_weak_normal_form(cfg)
