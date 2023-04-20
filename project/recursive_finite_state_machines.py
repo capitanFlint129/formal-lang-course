@@ -2,9 +2,9 @@ from collections import defaultdict
 from typing import AbstractSet
 import re
 
+from pyformlang.cfg import CFG, Variable, Terminal
 from pyformlang.finite_automaton import NondeterministicFiniteAutomaton
 from pyformlang.regular_expression import Regex
-from pyformlang.cfg import CFG, Variable, Terminal
 
 from project.automata import get_deterministic_automata_from_regex
 from project.weak_chomsky_normal_form import read_grammar_from_file

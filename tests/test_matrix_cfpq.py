@@ -1,7 +1,7 @@
 from pyformlang.cfg import CFG, Variable
 
-from project.grapth_utils import create_two_cycles_graph
 from project.cfpq.matrix import get_reachable_pairs, cf_query_to_graph
+from project.grapth_utils import create_two_cycles_graph
 
 
 def test_get_reachable_pairs_hellings():

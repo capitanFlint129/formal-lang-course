@@ -1,9 +1,7 @@
-from pyformlang.finite_automaton import State
-
-from pyformlang.finite_automaton import NondeterministicFiniteAutomaton, Symbol
+from pyformlang.finite_automaton import NondeterministicFiniteAutomaton, State, Symbol
 from pyformlang.regular_expression import Regex
 
-from project import all_pairs_rpq, grapth_utils, automata
+from project import all_pairs_rpq, automata, grapth_utils
 
 
 def test_finite_automata_intersection():

@@ -1,4 +1,4 @@
-from pyformlang.cfg import Production, Variable, Terminal, CFG, Epsilon
+from pyformlang.cfg import CFG
 
 
 def transform_to_weak_normal_form(grammar: CFG) -> CFG:
