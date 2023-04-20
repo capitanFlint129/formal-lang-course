@@ -5,7 +5,7 @@ from scipy.sparse import block_diag
 import networkx as nx
 
 from project import automata
-from project.all_pairs_rpq import enumerate_states
+from project.rpq.all_pairs import enumerate_states
 from project.boolean_decomposition import *
 
 

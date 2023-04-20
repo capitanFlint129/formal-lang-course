@@ -1,8 +1,9 @@
 from pyformlang.regular_expression import Regex
 import pytest
 
-from project import automata, multiple_sources_rpq, grapth_utils
-from project.all_pairs_rpq import enumerate_states
+from project import automata, grapth_utils
+from project.rpq import multiple_sources
+from project.rpq.all_pairs import enumerate_states
 from project.boolean_decomposition import *
 
 
@@ -46,15 +47,13 @@ def test_multiple_sources_reachability_with_regular_constraints(
     graph_boolean_decomposition = get_boolean_decomposition_of_fa(
         graph_fa, states_order_graph_fa
     )
-    result = (
-        multiple_sources_rpq.multiple_sources_reachability_with_regular_constraints(
-            query_boolean_decomposition,
-            graph_boolean_decomposition,
-            [states_order_graph_fa[state] for state in graph_fa.start_states],
-            [states_order_query_fa[state] for state in query_fa.start_states],
-            [states_order_query_fa[state] for state in query_fa.final_states],
-            for_each_vertex,
-        )
+    result = multiple_sources.multiple_sources_reachability_with_regular_constraints(
+        query_boolean_decomposition,
+        graph_boolean_decomposition,
+        [states_order_graph_fa[state] for state in graph_fa.start_states],
+        [states_order_query_fa[state] for state in query_fa.start_states],
+        [states_order_query_fa[state] for state in query_fa.final_states],
+        for_each_vertex,
     )
     assert set(result) == set(expected)
 
@@ -85,7 +84,7 @@ def test_multiple_sources_regular_query_for_graph(for_each_vertex, query, expect
     )
     start_states = [1, 2, 3]
     final_states = [4, 5, 6]
-    result = multiple_sources_rpq.multiple_sources_regular_query_for_graph(
+    result = multiple_sources.multiple_sources_regular_query_for_graph(
         query,
         graph,
         start_states,
