@@ -9,12 +9,14 @@ from project.weak_chomsky_normal_form import (
 )
 
 
-def get_reachable_pairs_hellings(
+def get_reachable_pairs(
     graph: nx.Graph | str,
     cfg: CFG | str,
 ) -> set[tuple]:
     """
-    Executes context free query to the given graph
+    Finds all pairs of graph vertices where first vertex is reachable from
+    second vertex with path that belongs to given grammar
+    regardless of the starting non-terminal
 
     Parameters
     ----------
@@ -72,8 +74,32 @@ def cf_query_to_graph(
     start_states: Iterable[int],
     final_states: Iterable[int],
 ) -> set[tuple]:
+    """
+    Executes context free query to the given graph using Hellings algorithm
+
+    Parameters
+    ----------
+    query :
+        Context free grammar of query or path to file with text representation of cfg
+    graph :
+        The graph on which the request is executed or path to dot file of graph.
+        If a file is passed, then the first graph is taken from it
+    start_nonterminal :
+        Start nonterminal of query
+    start_states :
+        Graph vertices which interpreted as start states
+    final_states :
+        Graph vertices which interpreted as final states
+
+    Returns
+    ----------
+    result :
+        Set of pairs of vertices, where first vertex is start state and second vertex is
+        final state. Second vertex is reachable from first vertex and path is
+        belongs to the language with grammar from query
+    """
     return {
         (src, dst)
-        for src, sym, dst in get_reachable_pairs_hellings(graph, query)
+        for src, sym, dst in get_reachable_pairs(graph, query)
         if src in start_states and sym == start_nonterminal and dst in final_states
     }
