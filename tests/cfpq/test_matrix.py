@@ -4,7 +4,7 @@ from project.cfpq import matrix
 from project.grapth_utils import create_two_cycles_graph
 
 
-def test_get_reachable_pairs_using_matrix():
+def test_get_reachable_pairs_matrix():
     grammar = CFG.from_text(
         """
         S -> A B
