@@ -1,7 +1,7 @@
 from pyformlang.cfg import CFG, Variable
 
+from project.cfpq import hellings
 from project.grapth_utils import create_two_cycles_graph
-from project.hellings_algorithm import get_reachable_pairs_hellings, cf_query_to_graph
 
 
 def test_get_reachable_pairs_hellings():
@@ -15,7 +15,7 @@ def test_get_reachable_pairs_hellings():
         """
     )
     graph = create_two_cycles_graph(2, 1, ["a", "b"])
-    result = get_reachable_pairs_hellings(graph, grammar)
+    result = hellings.get_reachable_pairs(graph, grammar)
     expected = {
         (0, Variable("A"), 1),
         (0, Variable("B"), 3),
@@ -38,7 +38,7 @@ def test_get_reachable_pairs_hellings():
     assert result == expected
 
 
-def test_cf_query_to_graph():
+def test_cf_query_to_graph_hellings():
     grammar = CFG.from_text(
         """
         S -> A B
@@ -49,7 +49,7 @@ def test_cf_query_to_graph():
         """
     )
     graph = create_two_cycles_graph(2, 1, ["a", "b"])
-    result = cf_query_to_graph(
+    result = hellings.cf_query_to_graph(
         grammar,
         graph,
         Variable("S"),

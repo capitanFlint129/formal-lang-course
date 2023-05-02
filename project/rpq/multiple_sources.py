@@ -5,7 +5,7 @@ from scipy.sparse import block_diag
 import networkx as nx
 
 from project import automata
-from project.all_pairs_rpq import enumerate_states
+from project.rpq.all_pairs import enumerate_states
 from project.boolean_decomposition import *
 
 
@@ -132,9 +132,9 @@ def _transform_rows(
     """
     Swaps rows of matrix to get ones on main diagonal for each source vertex.
     The elements must be such that the leftmost square
-    submatrix becomes identity matrix
+    sub-matrix becomes identity matrix
     """
-    if query_vertices_number == None:
+    if query_vertices_number is None:
         query_vertices_number = matrix.shape[0]
 
     result = matrix.tocsr()

@@ -1,9 +1,8 @@
-from pyformlang.finite_automaton import State
-
-from pyformlang.finite_automaton import NondeterministicFiniteAutomaton, Symbol
+from pyformlang.finite_automaton import NondeterministicFiniteAutomaton, State, Symbol
 from pyformlang.regular_expression import Regex
 
-from project import all_pairs_rpq, grapth_utils, automata
+from project import automata, grapth_utils
+from project.rpq import all_pairs
 
 
 def test_finite_automata_intersection():
@@ -38,16 +37,16 @@ def test_finite_automata_intersection():
     )
 
     expected = fa1.get_intersection(fa2)
-    result = all_pairs_rpq.finite_automata_intersection(fa1, fa2)
+    result = all_pairs.finite_automata_intersection(fa1, fa2)
     assert expected.is_equivalent_to(result)
 
     expected = fa1.get_intersection(fa1)
-    result = all_pairs_rpq.finite_automata_intersection(fa1, fa1)
+    result = all_pairs.finite_automata_intersection(fa1, fa1)
     assert expected.is_equivalent_to(result)
 
     fa2 = NondeterministicFiniteAutomaton()
     expected = fa1.get_intersection(fa2)
-    result = all_pairs_rpq.finite_automata_intersection(fa1, fa2)
+    result = all_pairs.finite_automata_intersection(fa1, fa2)
     assert expected.is_equivalent_to(result)
 
 
@@ -68,7 +67,7 @@ def test_finite_automata_intersection_regex_and_graph():
         graph, start_states, final_states
     )
 
-    result = all_pairs_rpq.finite_automata_intersection(query_fa, graph_fa)
+    result = all_pairs.finite_automata_intersection(query_fa, graph_fa)
 
     expected = query_fa.get_intersection(graph_fa)
     assert result.is_equivalent_to(expected)
@@ -87,9 +86,7 @@ def test_regular_query_to_graph():
     final_states = [4, 5, 6]
     query = Regex("a* b*")
 
-    result = all_pairs_rpq.regular_query_to_graph(
-        query, graph, start_states, final_states
-    )
+    result = all_pairs.regular_query_to_graph(query, graph, start_states, final_states)
     expected = [
         (start_state, final_state)
         for start_state in start_states
@@ -98,22 +95,16 @@ def test_regular_query_to_graph():
     assert set(result) == set(expected)
 
     query = Regex("a*")
-    result = all_pairs_rpq.regular_query_to_graph(
-        query, graph, start_states, final_states
-    )
+    result = all_pairs.regular_query_to_graph(query, graph, start_states, final_states)
     expected = []
     assert result == expected
 
     query = Regex("b*")
-    result = all_pairs_rpq.regular_query_to_graph(
-        query, graph, start_states, final_states
-    )
+    result = all_pairs.regular_query_to_graph(query, graph, start_states, final_states)
     expected = [(0, 4), (0, 5), (0, 6)]
     assert result == expected
 
     query = Regex("a a b")
-    result = all_pairs_rpq.regular_query_to_graph(
-        query, graph, start_states, final_states
-    )
+    result = all_pairs.regular_query_to_graph(query, graph, start_states, final_states)
     expected = [(2, 4)]
     assert result == expected

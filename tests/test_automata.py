@@ -1,10 +1,10 @@
-from pyformlang.regular_expression import Regex
 from pyformlang.finite_automaton import (
     DeterministicFiniteAutomaton,
     State,
     Symbol,
     NondeterministicFiniteAutomaton,
 )
+from pyformlang.regular_expression import Regex
 
 from project import automata, grapth_utils
 
