@@ -13,6 +13,8 @@ val =
     String of string
   | Int of int
   | Bool of bool
+  | Set of set
+  | List of list
 
 expr =
     Var of var                   // переменные
@@ -64,6 +66,8 @@ val ->
     '"' string '"'
   | integer
   | bool
+  | list
+  | set
 
 expr ->
     name
