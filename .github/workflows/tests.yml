@@ -30,4 +30,10 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: result
-          path: tests/data/query_language/result.dot
+          path: tests/data/query_language/result.dot 
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v2.1.1
+        with:
+          # Artifact name
+          name: result
+          path: tests/data/query_language/result.dot 
