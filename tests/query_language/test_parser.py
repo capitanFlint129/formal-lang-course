@@ -1,6 +1,6 @@
-import filecmp
-
 import pytest
+from networkx.drawing.nx_pydot import read_dot
+from networkx.utils.misc import graphs_equal
 
 from project.query_language.parser import *
 
@@ -89,7 +89,7 @@ def test_export_tree_to_dot():
     expected_path = "tests/data/query_language/expected.dot"
     with open(script_path, "r", newline="") as script_file:
         export_script_to_dot(script_file.read(), result_path)
-    assert filecmp.cmp(result_path, expected_path)
+    assert graphs_equal(read_dot(expected_path), read_dot(result_path))
 
 
 def test_export_tree_from_file_to_dot():
@@ -97,4 +97,4 @@ def test_export_tree_from_file_to_dot():
     result_path = "tests/data/query_language/result.dot"
     expected_path = "tests/data/query_language/expected.dot"
     export_script_file_to_dot(script_path, result_path)
-    assert filecmp.cmp(result_path, expected_path)
+    assert graphs_equal(read_dot(expected_path), read_dot(result_path))
