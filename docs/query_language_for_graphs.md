@@ -44,13 +44,13 @@ lambda = List<var> * expr
 ## Описание конкретного синтаксиса языка
 
 ```
-prog -> '' | stmt | stmt prog
+prog -> '' | stmt | stmt '\r\n' prog
 
-stmt -> name '=' expr | 'print ' expr
+stmt -> name ' = ' expr | 'print ' expr
 
-name -> string
+name -> literal | literal name
 
-string -> literal | literal string
+string -> '/' | '.' | literal | string string
 
 literal -> char | digit | '_'
 
@@ -74,35 +74,33 @@ expr ->
   | val
   | set
   | list
-  | 'setStart ' expr ' ' expr
-  | 'setFinal ' expr ' ' expr
-  | 'addStart ' expr ' ' expr
-  | 'addFinal ' expr ' ' expr
-  | 'getStart ' expr
-  | 'getFinal ' expr
-  | 'getReachable ' expr
-  | 'getVertices ' expr
-  | 'getEdges ' expr
-  | 'getEdges ' expr
-  | 'map (' lambda ') ' expr
-  | 'filter (' lambda ') ' expr
+  | 'setStart ( ' expr ' ) ( ' expr ' )'
+  | 'setFinal ( ' expr ' ) ( ' expr ' )'
+  | 'addStart ( ' expr ' ) ( ' expr ' )'
+  | 'addFinal ( ' expr ' ) ( ' expr ' )'
+  | 'getStart ( ' expr ' )'
+  | 'getFinal ( ' expr ' )'
+  | 'getReachable ( ' expr ' )'
+  | 'getVertices ( ' expr ' )'
+  | 'getEdges ( ' expr ' )'
+  | 'getEdges ( ' expr ' )'
+  | 'map ( ' lambda ' ) ( ' expr ' )'
+  | 'filter ( ' lambda ' ) ( ' expr ' )'
   | 'load ' string
   | expr ' & ' expr
   | expr ' ++ ' expr
   | expr ' | ' expr
   | '*' expr
   | 'smb ' expr
-  | '(' expr ')'
-  | expr ' in ' sequence
-  | list '[' integer ']'
+  | '( ' expr ' )'
+  | expr ' in ' expr
+  | expr '[ ' integer ' ]'
 
-list -> '[' elements ']'
+list -> '[ ' elements ' ]'
 
-set -> '{' elements '}'
+set -> '{ ' elements ' }'
 
-sequence -> list | set
-
-elements -> '' | expr | expr ', ' elements |  integer '..' integer
+elements -> expr | expr ', ' elements |  integer '..' integer
 
 lambdaArgs -> name | name ', ' lambdaArgs
 
@@ -117,14 +115,14 @@ lambda -> '\' lambdaArgs ' -> ' expr
 Загрузка графа из файла.
 
 ```
-g_ = load "/home/user/wine.dot"
+g_ = load /home/user/wine.dot
 ```
 
 Создаем новый граф. Из `g_` берутся все вершины и устанавливаются в качестве финальных,
 в полученном графе, в качестве стартовых устанавливаются вершины от 0 до 100.
 Имя `g` связывается с полученным графом.
 ```
-g = setStart (setFinal g_ (getVertices g_)) {0..100}
+g = setStart ( setFinal ( g_ ) ( getVertices ( g_ ) ) ) ( { 0..100 } )
 ```
 
 Создаем запросы с помощью операций объединения, замыкания и конкатенации.
@@ -132,7 +130,7 @@ g = setStart (setFinal g_ (getVertices g_)) {0..100}
 ```
 l1 = "l1" | "l2"
 
-q1 = ("type" | l1)*
+q1 = *( "type" | l1 )
 q2 = "sub_class_of" ++ l1
 ```
 
@@ -146,7 +144,7 @@ print res1
 
 Получаем стартовые состояния графа.
 ```
-s = getStart g
+s = getStart ( g )
 ```
 
 Для каждого из языков-результатов получаем список ребер, с помощью map и лямбды
@@ -154,8 +152,8 @@ s = getStart g
 соответсвующую графу. После чего с помощью filter оставляем только те вершины,
 которые являются стартовыми вершинами графа.
 ```
-vertices1 = filter (\v -> v in s) (map (\edge -> edge[0][0]) (getEdges res1))
-vertices2 = filter (\v -> v in s) (map (\edge -> edge[0][0]) (getEdges res2))
+vertices1 = filter ( \v -> v in s ) ( map ( \edge -> edge[ 0 ][ 0 ] ) ( getEdges ( res1 ) ) )
+vertices2 = filter ( \v -> v in s ) ( map ( \edge -> edge[ 0 ][ 0 ] ) ( getEdges ( res2 ) ) )
 ```
 
 Строим пересечение полученных множеств вершин и печатаем их.
