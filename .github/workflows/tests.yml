@@ -26,3 +26,8 @@ jobs:
           pip install pytest
           pip install pytest-cov
           pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+      - name: Archive dot export results
+        uses: actions/upload-artifact@v3
+        with:
+          name: result
+          path: tests/data/query_language/result.dot
