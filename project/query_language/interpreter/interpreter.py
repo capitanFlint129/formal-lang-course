@@ -2,7 +2,9 @@ import sys
 import typing
 
 from antlr4 import *
+from pyformlang.regular_expression import Regex
 
+from project import automata
 from project.automata import get_nondeterministic_automata_from_graph
 from project.graph_utils import load_graph_from_dot
 from project.query_language.grammar.QueryLanguageLexer import QueryLanguageLexer
@@ -36,15 +38,38 @@ class Expression:
 
 class InterpretVisitor(QueryLanguageVisitor):
     def __init__(self, file=sys.stdout):
-        self.vars_dict: dict[str, Expression] = {}
+        self.frames = []
+        self.cur_frame: dict[str, Expression] = {}
         self.file = file
+
+    def _get_value(self, name: str) -> typing.Optional[Expression]:
+        if name in self.cur_frame:
+            return self.cur_frame[name]
+        for frame in reversed(self.frames):
+            if name in frame:
+                return frame[name]
+        return None
+
+    def _set_value(self, name: str, expr: Expression):
+        self.cur_frame[name] = expr
+
+    def _enter_frame(self):
+        self.frames.append(self.cur_frame)
+        self.cur_frame = {}
+
+    def _exit_frame(self):
+        if len(self.frames) == 0:
+            raise Exception("Bad frames state")
+        self.cur_frame = self.frames[-1]
+        self.frames = self.frames[:-1]
 
     def visitDeclaration(self, ctx: QueryLanguageParser.DeclarationContext):
         var_name = ctx.children[0].getText()
-        if var_name in self.vars_dict:
+        if self._get_value(var_name) is not None:
             raise Exception("Redeclaring a variable")
+        self._set_value(var_name, Expression(None, RSMType()))
         expr = self.visit(ctx.children[2])
-        self.vars_dict[var_name] = expr
+        self._set_value(var_name, expr)
 
     def visitPrint(self, ctx: QueryLanguageParser.PrintContext):
         expr = self.visit(ctx.children[1])
@@ -53,9 +78,10 @@ class InterpretVisitor(QueryLanguageVisitor):
 
     def visitName(self, ctx: QueryLanguageParser.NameContext):
         var_name = ctx.getText()
-        if var_name in self.vars_dict:
+        value = self._get_value(var_name)
+        if value is None:
             raise Exception("Unknown name")
-        return self.vars_dict[var_name]
+        return value
 
     def visitString(self, ctx: QueryLanguageParser.StringContext):
         return Expression(ctx.getText(), StringType())
@@ -66,11 +92,18 @@ class InterpretVisitor(QueryLanguageVisitor):
     def visitBool(self, ctx: QueryLanguageParser.BoolContext):
         return Expression(ctx.getText() == str(True), BoolType())
 
-    def visitVal(self, ctx: QueryLanguageParser.ValContext):
-        return self.visitChildren(ctx)
-
     def visitSetStart(self, ctx: QueryLanguageParser.SetStartContext):
-        return self.visitChildren(ctx)
+        startsExpr = self.visitChildren(ctx.children[1])
+        expr = self.visitChildren(ctx.children[3])
+        if not isinstance(expr.type, AutomataType):
+            raise Exception("Can't apply automata operation to non automata")
+        if startsExpr.type == SetType([IntType]):
+            return Expression(expr.value.set, expr.type)
+        elif startsExpr.type == SetType(
+            tuple([ListType([IntType(), SetType([StringType])])])
+        ):
+            return Expression(expr.value.set, RSMType())
+        raise Exception(f"Start states can't defined as {startsExpr.type}")
 
     # Visit a parse tree produced by QueryLanguageParser#setFinal.
     def visitSetFinal(self, ctx: QueryLanguageParser.SetFinalContext):
@@ -104,68 +137,127 @@ class InterpretVisitor(QueryLanguageVisitor):
     def visitGetEdges(self, ctx: QueryLanguageParser.GetEdgesContext):
         return self.visitChildren(ctx)
 
-    # Visit a parse tree produced by QueryLanguageParser#map.
     def visitMap(self, ctx: QueryLanguageParser.MapContext):
-        return self.visitChildren(ctx)
+        container_expr = self.visit(ctx.children[1])
+        if not isinstance(container_expr.type, ContainerType):
+            raise Exception(f"Can't map lambda to {container_expr.type}")
+        lambda_func = self.visit(ctx.children[1])
+        if len(lambda_func.args) != 1:
+            raise Exception(f"Wrong number of parameters in lambda")
+        self._enter_frame()
+        result = []
+        for el, el_type in zip(container_expr.value, container_expr.type.params):
+            self._set_value(lambda_func.args[0], Expression(el, el_type))
+            result.append(self.visit(lambda_func.expr_ctx))
+        self._exit_frame()
+        return Expression(tuple(result), ListType(tuple([el.type for el in result])))
 
-    # Visit a parse tree produced by QueryLanguageParser#filter.
     def visitFilter(self, ctx: QueryLanguageParser.FilterContext):
-        return self.visitChildren(ctx)
+        container_expr = self.visit(ctx.children[1])
+        if not isinstance(container_expr.type, ContainerType):
+            raise Exception(f"Can't map lambda to {container_expr.type}")
+        lambda_func = self.visit(ctx.children[1])
+        if len(lambda_func.args) != 1:
+            raise Exception(f"Wrong number of parameters in lambda")
+        self._enter_frame()
+        result = []
+        for el, el_type in zip(container_expr.value, container_expr.type.params):
+            self._set_value(lambda_func.args[0], Expression(el, el_type))
+            is_accepted = self.visit(lambda_func.expr_ctx)
+            if not isinstance(is_accepted.type, BoolType):
+                raise Exception(f"Filter accepts lambda which returns bool value")
+            if is_accepted.value:
+                result.append(el)
+        self._exit_frame()
+        return Expression(tuple(result), ListType(tuple([el.type for el in result])))
 
     def visitLoad(self, ctx: QueryLanguageParser.LoadContext):
         path = ctx.children[1].getText()
-        graph = load_graph_from_dot(path)
-        fa = get_nondeterministic_automata_from_graph(graph)
+        try:
+            graph = load_graph_from_dot(path)
+            fa = get_nondeterministic_automata_from_graph(graph)
+        except Exception:
+            raise Exception("Can't load graph")
         return Expression(fa, FAType())
 
-    # Visit a parse tree produced by QueryLanguageParser#intersect.
+        # Visit a parse tree produced by QueryLanguageParser#intersect.
+
     def visitIntersect(self, ctx: QueryLanguageParser.IntersectContext):
         return self.visitChildren(ctx)
 
-    # Visit a parse tree produced by QueryLanguageParser#concat.
+        # Visit a parse tree produced by QueryLanguageParser#concat.
+
     def visitConcat(self, ctx: QueryLanguageParser.ConcatContext):
         return self.visitChildren(ctx)
 
-    # Visit a parse tree produced by QueryLanguageParser#union.
+        # Visit a parse tree produced by QueryLanguageParser#union.
+
     def visitUnion(self, ctx: QueryLanguageParser.UnionContext):
         return self.visitChildren(ctx)
 
-    # Visit a parse tree produced by QueryLanguageParser#star.
+        # Visit a parse tree produced by QueryLanguageParser#star.
+
     def visitStar(self, ctx: QueryLanguageParser.StarContext):
         return self.visitChildren(ctx)
 
-    # Visit a parse tree produced by QueryLanguageParser#smb.
     def visitSmb(self, ctx: QueryLanguageParser.SmbContext):
-        return self.visitChildren(ctx)
+        expr = self.visitChildren(ctx)
+        if expr.type != StringType():
+            raise Exception("Automatas with non string labels are forbidden")
+        return Expression(
+            automata.get_deterministic_automata_from_regex(Regex(expr.value)), FAType()
+        )
 
-    # Visit a parse tree produced by QueryLanguageParser#brakets.
-    def visitBrakets(self, ctx: QueryLanguageParser.BraketsContext):
-        return self.visitChildren(ctx)
-
-    # Visit a parse tree produced by QueryLanguageParser#in.
     def visitIn(self, ctx: QueryLanguageParser.InContext):
-        return self.visitChildren(ctx)
+        expr = self.visitChildren(ctx.children[1])
+        container_expr = self.visitChildren(ctx.children[3])
+        return Expression(expr.value in container_expr.value, BoolType())
 
-    # Visit a parse tree produced by QueryLanguageParser#listElement.
     def visitListElement(self, ctx: QueryLanguageParser.ListElementContext):
-        return self.visitChildren(ctx)
+        listExpr = self.visitChildren(ctx.children[1])
+        expr = self.visitChildren(ctx.children[3])
+        if not isinstance(listExpr.type, ListType):
+            raise Exception(f"{listExpr.type} is not subscriptable")
+        if expr.type != IntType():
+            raise Exception(f"List indices must be integers, not {expr.type}")
+        return Expression(listExpr.value[expr.value], listExpr.params[expr.value])
 
-    # Visit a parse tree produced by QueryLanguageParser#list.
     def visitList(self, ctx: QueryLanguageParser.ListContext):
-        return self.visitChildren(ctx)
+        elements = self.visitChildren(ctx)
+        return Expression(tuple(elements), ListType([el.type for el in elements]))
 
-    # Visit a parse tree produced by QueryLanguageParser#set.
     def visitSet(self, ctx: QueryLanguageParser.SetContext):
-        return self.visitChildren(ctx)
+        elements = self.visitChildren(ctx)
+        visited = set()
+        result = []
+        for el in elements:
+            if el.value not in visited:
+                result.append(el)
+        result = tuple(result)
+        return Expression(result, SetType(tuple([el.type for el in result])))
 
-    # Visit a parse tree produced by QueryLanguageParser#elements.
     def visitElements(self, ctx: QueryLanguageParser.ElementsContext):
-        return self.visitChildren(ctx)
+        element_expr = self.visit(ctx.children[0])
+        return [element_expr] + self.visit(ctx.children[2])
 
-    # Visit a parse tree produced by QueryLanguageParser#lambdaArgs.
+    def visitRange(self, ctx: QueryLanguageParser.RangeContext):
+        return [
+            Expression(i, IntType())
+            for i in range(
+                int(ctx.children[0].getText()), int(ctx.children[2].getText())
+            )
+        ]
+
     def visitLambdaArgs(self, ctx: QueryLanguageParser.LambdaArgsContext):
-        return self.visitChildren(ctx)
+        arg_name = ctx.children[0].getText()
+        return [arg_name] + self.visit(ctx.children[2])
 
-    # Visit a parse tree produced by QueryLanguageParser#lambda.
     def visitLambda(self, ctx: QueryLanguageParser.LambdaContext):
-        return self.visitChildren(ctx)
+        args = self.visit(ctx.children[1])
+        return Expression(Lambda(args, ctx.children[3]), LambdaType())
+
+
+class Lambda:
+    def __init__(self, args: tuple[str], expr_ctx: QueryLanguageParser.ExprContext):
+        self.args = args
+        self.expr_ctx = expr_ctx

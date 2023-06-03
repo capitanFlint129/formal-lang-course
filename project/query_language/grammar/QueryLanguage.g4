@@ -2,11 +2,10 @@ grammar QueryLanguage;
 
 prog: (stmt NEWLINE)+;
 
-NEWLINE : [\r\n]+ ;
-
 stmt: declaration | print;
 
 declaration: name ' = ' expr;
+
 print: 'print ' expr;
 
 name: literal | literal name;
@@ -15,12 +14,9 @@ string: '/' | '.' | literal | string string;
 
 literal: CHAR | DIGIT | '_';
 
-CHAR:  [a-zA-Z];
-DIGIT: [0-9];
-
 integer: DIGIT | DIGIT integer | '-' integer;
 
-bool: 'True' | 'False';
+bool: TRUE | FALSE;
 
 val:
   stringVal
@@ -73,16 +69,24 @@ union: '( 'expr ' | ' expr ' )';
 star: '*' expr;
 smb: 'smb ' expr;
 brakets: '( ' expr ' )';
-in: '( 'expr ' ) in ' expr;
-listElement: '( 'expr ' )[ ' integer ' ]';
+in: '( ' expr ' ) in ' expr;
+listElement: '( ' expr ' )[ ' integer ' ]';
 
-list: '[ ' elements ' ]';
+list: '[ ' elements ' ]' | '[ ' range ' ]';
 
-set: '{ ' elements ' }';
+set: '{ ' elements ' }' | '[ ' range ' ]';
 
 
-elements: expr | expr ', ' elements |  integer '..' integer;
+range: integer '..' integer;
+elements: expr | expr ', ' elements;
 
 lambdaArgs: name | name ', ' lambdaArgs;
 
 lambda: '\\' lambdaArgs ' -> ' expr;
+
+
+CHAR:  [a-zA-Z];
+DIGIT: [0-9];
+NEWLINE : [\r\n]+ ;
+TRUE: 'True';
+FALSE: 'False';

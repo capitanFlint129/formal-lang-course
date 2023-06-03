@@ -1,4 +1,4 @@
-g_ = load /home/user/wine.dot
+g_ = load docs/query_language/examples/example.dot
 g = setStart ( setFinal ( g_ ) ( getVertices ( g_ ) ) ) ( { 0..100 } )
 
 l1 = ( "l1" | "l2" )
