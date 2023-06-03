@@ -4,7 +4,10 @@ prog: (stmt NEWLINE)+;
 
 NEWLINE : [\r\n]+ ;
 
-stmt: name ' = ' expr | 'print ' expr;
+stmt: declaration | print;
+
+declaration: name ' = ' expr;
+print: 'print ' expr;
 
 name: literal | literal name;
 
@@ -20,38 +23,58 @@ integer: DIGIT | DIGIT integer | '-' integer;
 bool: 'True' | 'False';
 
 val:
-    '"' string '"'
+  stringVal
   | integer
   | bool
   | list
   | set;
 
+stringVal: '"' string '"';
+
 expr:
     name
   | val
-  | set
-  | list
-  | 'setStart ( ' expr ' ) ( ' expr ' )'
-  | 'setFinal ( ' expr ' ) ( ' expr ' )'
-  | 'addStart ( ' expr ' ) ( ' expr ' )'
-  | 'addFinal ( ' expr ' ) ( ' expr ' )'
-  | 'getStart ( ' expr ' )'
-  | 'getFinal ( ' expr ' )'
-  | 'getReachable ( ' expr ' )'
-  | 'getVertices ( ' expr ' )'
-  | 'getEdges ( ' expr ' )'
-  | 'getEdges ( ' expr ' )'
-  | 'map ( ' lambda ' ) ( ' expr ' )'
-  | 'filter ( ' lambda ' ) ( ' expr ' )'
-  | 'load ' string
-  | expr ' & ' expr
-  | expr ' ++ ' expr
-  | expr ' | ' expr
-  | '*' expr
-  | 'smb ' expr
-  | '( ' expr ' )'
-  | expr ' in ' expr
-  | expr '[ ' integer ' ]';
+  | setStart
+  | setFinal
+  | addStart
+  | addFinal
+  | getStart
+  | getFinal
+  | getReachable
+  | getVertices
+  | getEdges
+  | map
+  | filter
+  | load
+  | intersect
+  | concat
+  | union
+  | star
+  | smb
+  | brakets
+  | in
+  | listElement;
+
+setStart: 'setStart ( ' expr ' ) ( ' expr ' )';
+setFinal: 'setFinal ( ' expr ' ) ( ' expr ' )';
+addStart: 'addStart ( ' expr ' ) ( ' expr ' )';
+addFinal: 'addFinal ( ' expr ' ) ( ' expr ' )';
+getStart: 'getStart ( ' expr ' )';
+getFinal: 'getFinal ( ' expr ' )';
+getReachable: 'getReachable ( ' expr ' )';
+getVertices: 'getVertices ( ' expr ' )';
+getEdges: 'getEdges ( ' expr ' )';
+map: 'map ( ' lambda ' ) ( ' expr ' )';
+filter: 'filter ( ' lambda ' ) ( ' expr ' )';
+load: 'load ' string;
+intersect: '( 'expr ' & ' expr ' )';
+concat: '( 'expr ' ++ ' expr ' )';
+union: '( 'expr ' | ' expr ' )';
+star: '*' expr;
+smb: 'smb ' expr;
+brakets: '( ' expr ' )';
+in: '( 'expr ' ) in ' expr;
+listElement: '( 'expr ' )[ ' integer ' ]';
 
 list: '[ ' elements ' ]';
 
