@@ -77,7 +77,7 @@ def check_script_correct(script: str) -> bool:
     result :
         Returns True if and only if input is accepted by query language grammar
     """
-    return _check_script(InputStream(script))
+    return check_script_stream_correct(InputStream(script))
 
 
 def check_script_file_correct(path: str) -> bool:
@@ -94,10 +94,10 @@ def check_script_file_correct(path: str) -> bool:
     result :
         Returns True if and only if input is accepted by query language grammar
     """
-    return _check_script(FileStream(path))
+    return check_script_stream_correct(FileStream(path))
 
 
-def _check_script(input_stream):
+def check_script_stream_correct(input_stream):
     lexer = QueryLanguageLexer(input_stream)
     lexer_error_listener = CountErrorListener()
     lexer.addErrorListener(lexer_error_listener)
