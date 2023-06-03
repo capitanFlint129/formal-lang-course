@@ -1,0 +1,113 @@
+a = [ 1, 2, 3, 4, 5, 6 ]
+a1 = []
+print "__a"
+print a
+print ( ( a ) )
+
+print ( a )[ 0 ]
+print ( a )[ 1 ]
+print ( a )[ 2 ]
+print ( a )[ 3 ]
+print ( a )[ 4 ]
+print ( a )[ 5 ]
+
+print ( 0 ) in a
+print ( 1 ) in a
+print ( 2 ) in a
+print ( 3 ) in a
+print ( 4 ) in a
+print ( 5 ) in a
+print ( 6 ) in a
+print ( 7 ) in a
+print ( "" ) in a
+print ( [] ) in a
+print ( a ) in a
+print ( 0 ) in a1
+
+
+b = [ -1, 2, -3, 4, -5, -6 ]
+print "__b"
+print b
+
+c = [ 0..10 ]
+print "__c"
+print c
+
+d = [ 2..10 ]
+print "__d"
+print d
+
+e = [ -2..10 ]
+print "__e"
+print e
+
+f = [ a, b, c, d, e ]
+print "__f"
+print f
+
+g = [ [ 1, 2, 3, 4 ], [ "aa", 1 ], [ a, b, c ] ]
+print "__g"
+print g
+
+g1 = [ [ 1, [ 2 ], [ 3, [ False ] ], [ 4 ] ], [ "aa", 1 ], [ a, b, c ] ]
+print "__g1"
+print g1
+print ( ( ( ( g1 )[ 0 ] )[ 2 ] )[ 1 ] )[ 0 ]
+
+print ""
+
+a_set = { 1, 2, 3, 4, 5, 6 }
+a1_set = {}
+print "__a_set"
+print a_set
+
+print ( 0 ) in a_set
+print ( 1 ) in a_set
+print ( 2 ) in a_set
+print ( 3 ) in a_set
+print ( 4 ) in a_set
+print ( 5 ) in a_set
+print ( 6 ) in a_set
+print ( 7 ) in a_set
+print ( "" ) in a_set
+print ( [] ) in a_set
+print ( a ) in a_set
+print ( 0 ) in a1_set
+
+print ( ( a_set ) )
+
+a_set_2 = { 1, 1, 2, 3, 4, 5, 6 }
+print "__a_set_2"
+print a_set_2
+
+a_set_3 = { [ 1, 2, 3 ], 2, 3, [ 1, 2 ], [ 1, 2, 3 ] }
+print "__a_set_3"
+print a_set_3
+
+b_set = { -1, 2, -3, 4, -5, -6 }
+print "__b_set"
+print b_set
+
+c_set = { 0..10 }
+print "__c_set"
+print c_set
+
+d_set = { 2..10 }
+print "__d_set"
+print d_set
+
+e_set = { -2..10 }
+print "__e_set"
+print e_set
+
+f_set = { a, b, c, d, e }
+print "__f_set"
+print f_set
+
+f_set_2 = { a_set, b_set, c_set, d_set, e_set }
+print "__f_set_2"
+print f_set_2
+
+g_set = { { 1, 2, 3, 4 }, { "aa", 1 }, { a, b, c } }
+print "__g_set"
+print g_set

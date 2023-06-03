@@ -8,9 +8,9 @@ declaration: name ' = ' expr;
 
 print: 'print ' expr;
 
-name: literal | literal name;
+name: CHAR | '_' | name literal;
 
-string: '/' | '.' | literal | string string;
+string: '/' | '.' | ' ' | literal | string string;
 
 literal: CHAR | DIGIT | '_';
 
@@ -25,7 +25,7 @@ val:
   | list
   | set;
 
-stringVal: '"' string '"';
+stringVal: '"' string '"' | '""';
 
 expr:
     name
@@ -62,7 +62,7 @@ getVertices: 'getVertices ( ' expr ' )';
 getEdges: 'getEdges ( ' expr ' )';
 map: 'map ( ' lambda ' ) ( ' expr ' )';
 filter: 'filter ( ' lambda ' ) ( ' expr ' )';
-load: 'load ' string;
+load: 'load ' stringVal;
 intersect: '( 'expr ' & ' expr ' )';
 concat: '( 'expr ' ++ ' expr ' )';
 union: '( 'expr ' | ' expr ' )';
@@ -72,9 +72,9 @@ brakets: '( ' expr ' )';
 in: '( ' expr ' ) in ' expr;
 listElement: '( ' expr ' )[ ' integer ' ]';
 
-list: '[ ' elements ' ]' | '[ ' range ' ]';
+list: '[]' | '[ ' elements ' ]' | '[ ' range ' ]';
 
-set: '{ ' elements ' }' | '[ ' range ' ]';
+set: '{}' | '{ ' elements ' }' | '{ ' range ' }';
 
 
 range: integer '..' integer;
