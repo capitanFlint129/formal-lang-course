@@ -2,7 +2,7 @@ import pytest
 from networkx.drawing.nx_pydot import read_dot
 from networkx.utils.misc import graphs_equal
 
-from project.query_language.parser import *
+from project.query_language.grammar.parser import *
 
 
 @pytest.mark.parametrize(

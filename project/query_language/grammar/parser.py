@@ -2,8 +2,8 @@ from antlr4 import *
 from antlr4.error.ErrorListener import ErrorListener
 from pydot import Dot, Node, Edge
 
-from project.query_language.QueryLanguageLexer import QueryLanguageLexer
-from project.query_language.QueryLanguageParser import QueryLanguageParser
+from project.query_language.grammar.QueryLanguageLexer import QueryLanguageLexer
+from project.query_language.grammar.QueryLanguageParser import QueryLanguageParser
 
 
 class CountErrorListener(ErrorListener):
