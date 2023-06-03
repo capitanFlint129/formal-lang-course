@@ -6,7 +6,7 @@ from pyformlang.finite_automaton import (
 )
 from pyformlang.regular_expression import Regex
 
-from project import automata, grapth_utils
+from project import automata, graph_utils
 
 
 def test_get_deterministic_automata_from_regex_one_symbol():
@@ -126,7 +126,7 @@ def test_get_deterministic_automata_from_regex_star_and_union():
 
 
 def test_get_nondeterministic_automata_from_two_cycles_generated_graph():
-    graph = grapth_utils.create_two_cycles_graph(5, 3, ["a", "b"])
+    graph = graph_utils.create_two_cycles_graph(5, 3, ["a", "b"])
 
     nfa = NondeterministicFiniteAutomaton()
     states = [State(i) for i in range(9)]
@@ -149,7 +149,7 @@ def test_get_nondeterministic_automata_from_two_cycles_generated_graph():
 
 
 def test_get_nondeterministic_automata_from_two_cycles_generated_graph_with_final_and_start_states():
-    graph = grapth_utils.create_two_cycles_graph(5, 3, ["a", "b"])
+    graph = graph_utils.create_two_cycles_graph(5, 3, ["a", "b"])
 
     nfa = NondeterministicFiniteAutomaton()
     states = [State(i) for i in range(9)]

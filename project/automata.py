@@ -60,8 +60,8 @@ def get_nondeterministic_automata_from_graph(
     Examples
     --------
 
-    >>> from project import grapth_utils
-    >>> graph = grapth_utils.create_two_cycles_graph(5, 3, ("a", "b",))
+    >>> from project import graph_utils
+    >>> graph = graph_utils.create_two_cycles_graph(5, 3, ("a", "b",))
     >>> get_nondeterministic_automata_from_graph(graph, [1, 2, 3], [4, 5])
 
     """

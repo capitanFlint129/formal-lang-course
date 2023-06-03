@@ -1,7 +1,7 @@
 from pyformlang.finite_automaton import NondeterministicFiniteAutomaton, State, Symbol
 from pyformlang.regular_expression import Regex
 
-from project import automata, grapth_utils
+from project import automata, graph_utils
 from project.rpq import all_pairs
 
 
@@ -51,7 +51,7 @@ def test_finite_automata_intersection():
 
 
 def test_finite_automata_intersection_regex_and_graph():
-    graph = grapth_utils.create_two_cycles_graph(
+    graph = graph_utils.create_two_cycles_graph(
         3,
         3,
         (
@@ -74,7 +74,7 @@ def test_finite_automata_intersection_regex_and_graph():
 
 
 def test_regular_query_to_graph():
-    graph = grapth_utils.create_two_cycles_graph(
+    graph = graph_utils.create_two_cycles_graph(
         3,
         3,
         (
