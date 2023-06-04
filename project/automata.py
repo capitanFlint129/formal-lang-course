@@ -1,11 +1,11 @@
 from typing import Optional, Iterable
 
-from pyformlang.regular_expression import Regex
+import networkx as nx
 from pyformlang.finite_automaton import (
     DeterministicFiniteAutomaton,
     NondeterministicFiniteAutomaton,
 )
-import networkx as nx
+from pyformlang.regular_expression import Regex
 
 
 def get_deterministic_automata_from_regex(regex: Regex) -> DeterministicFiniteAutomaton:

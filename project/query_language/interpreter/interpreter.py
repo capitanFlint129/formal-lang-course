@@ -2,9 +2,9 @@ import sys
 import typing
 
 from antlr4 import *
+from pyformlang.finite_automaton import EpsilonNFA
 from pyformlang.regular_expression import Regex
 
-from project import automata
 from project.automata import get_nondeterministic_automata_from_graph
 from project.graph_utils import load_graph_from_dot
 from project.query_language.grammar.QueryLanguageLexer import QueryLanguageLexer
@@ -12,6 +12,10 @@ from project.query_language.grammar.QueryLanguageParser import QueryLanguagePars
 from project.query_language.grammar.QueryLanguageVisitor import QueryLanguageVisitor
 from project.query_language.grammar.parser import check_script_file_correct
 from project.query_language.interpreter.types import *
+from project.rpq.all_pairs import (
+    finite_automata_intersection,
+    get_reachable_by_intersection,
+)
 
 
 class Interpreter:
@@ -110,53 +114,115 @@ class InterpretVisitor(QueryLanguageVisitor):
         return Expression(ctx.getText() == str(True), BoolType())
 
     def visitSetStart(self, ctx: QueryLanguageParser.SetStartContext):
-        startsExpr = self.visitChildren(ctx.children[1])
+        starts_expr = self.visitChildren(ctx.children[1])
         expr = self.visitChildren(ctx.children[3])
+        self._check_automata_operation(expr)
+        if starts_expr.type == SetType([IntType]):
+            new_fa: EpsilonNFA = expr.value.copy()
+            new_fa.start_states.clear()
+            for state in starts_expr.value:
+                new_fa.add_start_state(state)
+            return Expression(new_fa, expr.type)
+        if starts_expr.type == SetType(
+            tuple([ListType([IntType(), SetType([StringType])])])
+        ):
+            # TODO RSM
+            return Expression(expr.value.set, RSMType())
+        raise Exception(
+            f"Statement - {self.statement_count}: States can't defined as {starts_expr.type}"
+        )
+
+    def visitSetFinal(self, ctx: QueryLanguageParser.SetFinalContext):
+        finals_expr = self.visitChildren(ctx.children[1])
+        expr = self.visitChildren(ctx.children[3])
+        self._check_automata_operation(expr)
+        if finals_expr.type == SetType([IntType]):
+            new_fa: EpsilonNFA = expr.value.copy()
+            new_fa.start_states.clear()
+            for state in finals_expr.value:
+                new_fa.add_final_state(state)
+            return Expression(new_fa, expr.type)
+        if finals_expr.type == SetType(
+            tuple([ListType([IntType(), SetType([StringType])])])
+        ):
+            # TODO RSM
+            return Expression(expr.value.set, RSMType())
+        raise Exception(
+            f"Statement - {self.statement_count}: States can't defined as {finals_expr.type}"
+        )
+
+    def visitAddStart(self, ctx: QueryLanguageParser.AddStartContext):
+        start_expr = self.visitChildren(ctx.children[1])
+        expr = self.visitChildren(ctx.children[3])
+        self._check_automata_operation(expr)
+        if start_expr.type == IntType:
+            new_fa: EpsilonNFA = expr.value.copy()
+            new_fa.add_start_state(start_expr.value)
+            return Expression(new_fa, expr.type)
+        if start_expr.type == ListType([IntType(), SetType([StringType])]):
+            # TODO RSM
+            return Expression(expr.value.set, RSMType())
+        raise Exception(
+            f"Statement - {self.statement_count}: States can't defined as {start_expr.type}"
+        )
+
+    def visitAddFinal(self, ctx: QueryLanguageParser.AddFinalContext):
+        final_expr = self.visitChildren(ctx.children[1])
+        expr = self.visitChildren(ctx.children[3])
+        self._check_automata_operation(expr)
+        if final_expr.type == IntType:
+            new_fa: EpsilonNFA = expr.value.copy()
+            new_fa.add_final_state(final_expr.value)
+            return Expression(new_fa, expr.type)
+        if final_expr.type == ListType([IntType(), SetType([StringType])]):
+            # TODO RSM
+            return Expression(expr.value.set, RSMType())
+        raise Exception(
+            f"Statement - {self.statement_count}: States can't defined as {final_expr.type}"
+        )
+
+    def visitGetStart(self, ctx: QueryLanguageParser.GetStartContext):
+        expr = self.visitChildren(ctx)
+        self._check_automata_operation(expr)
+        return Expression(
+            [el.int for el in expr.value.start_states], SetType([IntType()])
+        )
+
+    def visitGetFinal(self, ctx: QueryLanguageParser.GetFinalContext):
+        expr = self.visitChildren(ctx)
+        self._check_automata_operation(expr)
+        # TODO RSM
+        return Expression(
+            [el.int for el in expr.value.final_states], SetType([IntType()])
+        )
+
+    def visitGetReachable(self, ctx: QueryLanguageParser.GetReachableContext):
+        expr = self.visitChildren(ctx)
+        self._check_automata_operation(expr)
+        return Expression(
+            tuple(set(get_reachable_by_intersection(expr.value))),
+            SetType([ListType([IntType()])]),
+        )
+
+    def _check_automata_operation(self, expr: Expression):
         if not isinstance(expr.type, AutomataType):
             raise Exception(
                 f"Statement - {self.statement_count}: Can't apply automata operation to non automata"
             )
-        if startsExpr.type == SetType([IntType]):
-            return Expression(expr.value.set, expr.type)
-        elif startsExpr.type == SetType(
-            tuple([ListType([IntType(), SetType([StringType])])])
-        ):
-            return Expression(expr.value.set, RSMType())
-        raise Exception(
-            f"Statement - {self.statement_count}: Start states can't defined as {startsExpr.type}"
-        )
 
-    # Visit a parse tree produced by QueryLanguageParser#setFinal.
-    def visitSetFinal(self, ctx: QueryLanguageParser.SetFinalContext):
-        return self.visitChildren(ctx)
-
-    # Visit a parse tree produced by QueryLanguageParser#addStart.
-    def visitAddStart(self, ctx: QueryLanguageParser.AddStartContext):
-        return self.visitChildren(ctx)
-
-    # Visit a parse tree produced by QueryLanguageParser#addFinal.
-    def visitAddFinal(self, ctx: QueryLanguageParser.AddFinalContext):
-        return self.visitChildren(ctx)
-
-    # Visit a parse tree produced by QueryLanguageParser#getStart.
-    def visitGetStart(self, ctx: QueryLanguageParser.GetStartContext):
-        return self.visitChildren(ctx)
-
-    # Visit a parse tree produced by QueryLanguageParser#getFinal.
-    def visitGetFinal(self, ctx: QueryLanguageParser.GetFinalContext):
-        return self.visitChildren(ctx)
-
-    # Visit a parse tree produced by QueryLanguageParser#getReachable.
-    def visitGetReachable(self, ctx: QueryLanguageParser.GetReachableContext):
-        return self.visitChildren(ctx)
-
-    # Visit a parse tree produced by QueryLanguageParser#getVertices.
     def visitGetVertices(self, ctx: QueryLanguageParser.GetVerticesContext):
-        return self.visitChildren(ctx)
+        expr = self.visitChildren(ctx)
+        self._check_automata_operation(expr)
+        # TODO RSM
+        return Expression([el.int for el in expr.value.states], SetType([IntType()]))
 
-    # Visit a parse tree produced by QueryLanguageParser#getEdges.
     def visitGetEdges(self, ctx: QueryLanguageParser.GetEdgesContext):
-        return self.visitChildren(ctx)
+        expr = self.visitChildren(ctx)
+        # TODO RSM
+        return Expression(
+            tuple(set([(v.int, label.symb, u.int) for v, label, u in expr.value])),
+            SetType([IntType()]),
+        )
 
     def visitMap(self, ctx: QueryLanguageParser.MapContext):
         container_expr = self.visit(ctx.children[3])
@@ -216,25 +282,69 @@ class InterpretVisitor(QueryLanguageVisitor):
             raise Exception(f"Statement - {self.statement_count}: Can't load graph")
         return Expression(fa, FAType())
 
-        # Visit a parse tree produced by QueryLanguageParser#intersect.
-
     def visitIntersect(self, ctx: QueryLanguageParser.IntersectContext):
-        return self.visitChildren(ctx)
-
-        # Visit a parse tree produced by QueryLanguageParser#concat.
+        left = self.visit(ctx.children[0])
+        right = self.visit(ctx.children[1])
+        if isinstance(left.type, FAType) and isinstance(right.type, FAType):
+            # return Expression(left.value.get_intersection(right.value), FAType())
+            return Expression(
+                finite_automata_intersection(left.value, right.value), FAType()
+            )
+        # TODO check for RSM
+        if isinstance(left.type, RSMType) and isinstance(right.type, RSMType):
+            raise Exception(
+                f"Statement - {self.statement_count}: Intersections for RSM is not supported"
+            )
+        if isinstance(left.type, RSMType) or isinstance(right.type, RSMType):
+            raise Exception(
+                f"Statement - {self.statement_count}: Intersections for RSM is not implemented"
+            )
+        raise Exception(
+            f"Statement - {self.statement_count}: Can't concat non automata"
+        )
 
     def visitConcat(self, ctx: QueryLanguageParser.ConcatContext):
-        return self.visitChildren(ctx)
-
-        # Visit a parse tree produced by QueryLanguageParser#union.
+        left = self.visit(ctx.children[0])
+        right = self.visit(ctx.children[1])
+        # TODO check for RSM
+        if not (
+            isinstance(left.type, AutomataType) and isinstance(right.type, AutomataType)
+        ):
+            raise Exception(
+                f"Statement - {self.statement_count}: Can't concat non automata"
+            )
+        result_type = (
+            RSMType()
+            if isinstance(left.type, RSMType) or isinstance(right.type, RSMType)
+            else FAType()
+        )
+        return Expression(left.value.concatenate(right.value), result_type)
 
     def visitUnion(self, ctx: QueryLanguageParser.UnionContext):
-        return self.visitChildren(ctx)
-
-        # Visit a parse tree produced by QueryLanguageParser#star.
+        left = self.visit(ctx.children[0])
+        right = self.visit(ctx.children[1])
+        # TODO check for RSM
+        if not (
+            isinstance(left.type, AutomataType) and isinstance(right.type, AutomataType)
+        ):
+            raise Exception(
+                f"Statement - {self.statement_count}: Can't union non automata"
+            )
+        result_type = (
+            RSMType()
+            if isinstance(left.type, RSMType) or isinstance(right.type, RSMType)
+            else FAType()
+        )
+        return Expression(left.value.union(right.value), result_type)
 
     def visitStar(self, ctx: QueryLanguageParser.StarContext):
-        return self.visitChildren(ctx)
+        automata_expr = self.visit(ctx.children[1])
+        # TODO check for RFA
+        if isinstance(automata_expr.type, AutomataType):
+            return Expression(automata_expr.value.kleene_star(), automata_expr.type)
+        raise Exception(
+            f"Statement - {self.statement_count}: Can't apply kleene star to non automata"
+        )
 
     def visitSmb(self, ctx: QueryLanguageParser.SmbContext):
         expr = self.visitChildren(ctx)
@@ -242,9 +352,7 @@ class InterpretVisitor(QueryLanguageVisitor):
             raise Exception(
                 f"Statement - {self.statement_count}: Automatas with non string labels are forbidden"
             )
-        return Expression(
-            automata.get_deterministic_automata_from_regex(Regex(expr.value)), FAType()
-        )
+        return Expression(Regex(expr.value).to_epsilon_nfa(), FAType())
 
     def visitIn(self, ctx: QueryLanguageParser.InContext):
         expr = self.visitChildren(ctx.children[1])

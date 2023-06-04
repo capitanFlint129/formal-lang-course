@@ -174,7 +174,7 @@ def multiple_sources_regular_query_for_graph(
     graph: nx.Graph,
     start_states: Optional[Iterable] = None,
     final_states: Optional[Iterable] = None,
-    for_each_vertex: Optional[bool] = False,
+    for_each_vertex: bool = False,
 ) -> list:
     """
     Executes regular query to the given graph with given start and final vertices

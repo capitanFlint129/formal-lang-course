@@ -1,19 +1,20 @@
 from typing import Optional
 
+import networkx as nx
+from pyformlang.finite_automaton import EpsilonNFA
 from pyformlang.regular_expression import Regex
 from scipy.sparse import kron
-import networkx as nx
 
 from project import automata
 from project.boolean_decomposition import *
 
 
 def finite_automata_intersection(
-    fa1: NondeterministicFiniteAutomaton,
-    fa2: NondeterministicFiniteAutomaton,
+    fa1: EpsilonNFA,
+    fa2: EpsilonNFA,
     states_order_fa_1: Optional[dict[State, int]] = None,
     states_order_fa_2: Optional[dict[State, int]] = None,
-) -> NondeterministicFiniteAutomaton:
+) -> EpsilonNFA:
     """
     Builds intersection of two finite automata through the tensor product
 
@@ -95,7 +96,10 @@ def regular_query_to_graph(
     intersection = finite_automata_intersection(
         query_fa, graph_fa, states_order_query_fa, states_order_graph_fa
     )
+    return get_reachable_by_intersection(intersection, len(graph_fa.states))
 
+
+def get_reachable_by_intersection(intersection: EpsilonNFA, n: int = 1) -> list[tuple]:
     intersection_states_order = enumerate_states(intersection)
     intersection_boolean_decomposition = get_boolean_decomposition_of_fa(
         intersection, intersection_states_order
@@ -113,19 +117,19 @@ def regular_query_to_graph(
             ]:
                 result.append(
                     (
-                        start_state.value % len(graph_fa.states),
-                        final_state.value % len(graph_fa.states),
+                        start_state.value % n,
+                        final_state.value % n,
                     )
                 )
     return result
 
 
-def enumerate_states(fa: NondeterministicFiniteAutomaton) -> dict[State, int]:
+def enumerate_states(fa: EpsilonNFA) -> dict[State, int]:
     return {state: i for i, state in enumerate(fa.states)}
 
 
 def get_boolean_decomposition_of_fa(
-    fa: NondeterministicFiniteAutomaton,
+    fa: EpsilonNFA,
     states_order_fa: dict[State, int],
 ) -> dict[str, dok_matrix]:
     """
@@ -152,11 +156,11 @@ def get_fa_from_boolean_decomposition(
     boolean_decomposition: dict[Symbol, dok_matrix],
     start_states: Iterable[int],
     final_states: Iterable[int],
-) -> NondeterministicFiniteAutomaton:
+) -> EpsilonNFA:
     """
     Creates finite automata from boolean decomposition, start states and final states
     """
-    result_fa = NondeterministicFiniteAutomaton()
+    result_fa = EpsilonNFA()
     if len(boolean_decomposition) == 0:
         return result_fa
     states_number = next(iter(boolean_decomposition.values())).shape[0]
