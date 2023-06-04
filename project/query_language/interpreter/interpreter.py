@@ -2,10 +2,8 @@ import sys
 import typing
 
 from antlr4 import *
-from pyformlang.finite_automaton import EpsilonNFA
-from pyformlang.regular_expression import Regex
 
-from project.automata import get_nondeterministic_automata_from_graph
+from project.automata import *
 from project.graph_utils import load_graph_from_dot
 from project.query_language.grammar.QueryLanguageLexer import QueryLanguageLexer
 from project.query_language.grammar.QueryLanguageParser import QueryLanguageParser
@@ -84,7 +82,7 @@ class InterpretVisitor(QueryLanguageVisitor):
             raise Exception(
                 f"Statement - {self.statement_count}: Redeclaring a variable"
             )
-        self._set_value(var_name, Expression(None, RSMType()))
+        self._set_value(var_name, Expression(RFA(), RSMType()))
         expr = self.visit(ctx.children[2])
         self._set_value(var_name, expr)
 
@@ -128,7 +126,6 @@ class InterpretVisitor(QueryLanguageVisitor):
                 new_fa.add_start_state(state)
             return Expression(new_fa, expr.type)
         if starts_expr.type == SetType():
-            # TODO RSM
             return Expression(expr.value.set, RSMType())
         raise Exception(
             f"Statement - {self.statement_count}: States can't defined as {starts_expr.type}"
@@ -147,7 +144,6 @@ class InterpretVisitor(QueryLanguageVisitor):
         # if finals_expr.type == SetType(
         #     tuple([ListType([IntType(), SetType([StringType])])])
         # ):
-        #     # TODO RSM
         #     return Expression(expr.value.set, RSMType())
         raise Exception(
             f"Statement - {self.statement_count}: States can't defined as {finals_expr.type}"
@@ -161,7 +157,6 @@ class InterpretVisitor(QueryLanguageVisitor):
         new_fa.add_start_state(start_expr.value)
         return Expression(new_fa, expr.type)
         # if start_expr.type == ListType([IntType(), SetType([StringType])]):
-        #     # TODO RSM
         #     return Expression(expr.value.set, RSMType())
         # raise Exception(
         #     f"Statement - {self.statement_count}: States can't defined as {start_expr.type}"
@@ -176,7 +171,6 @@ class InterpretVisitor(QueryLanguageVisitor):
         new_fa.add_final_state(final_expr.value)
         return Expression(new_fa, expr.type)
         # if final_expr.type == ListType([IntType(), SetType([StringType])]):
-        #     # TODO RSM
         #     return Expression(expr.value.set, RSMType())
         # raise Exception(
         #     f"Statement - {self.statement_count}: States can't defined as {final_expr.type}"
@@ -192,7 +186,6 @@ class InterpretVisitor(QueryLanguageVisitor):
     def visitGetFinal(self, ctx: QueryLanguageParser.GetFinalContext):
         expr = self.visit(ctx.children[1])
         self._check_automata_operation(expr)
-        # TODO RSM
         return Expression(
             tuple([el.value for el in expr.value.final_states]), SetType()
         )
@@ -222,13 +215,11 @@ class InterpretVisitor(QueryLanguageVisitor):
     def visitGetVertices(self, ctx: QueryLanguageParser.GetVerticesContext):
         expr = self.visit(ctx.children[1])
         self._check_automata_operation(expr)
-        # TODO RSM
         return Expression(tuple([el.value for el in expr.value.states]), SetType())
 
     def visitGetEdges(self, ctx: QueryLanguageParser.GetEdgesContext):
         expr = self.visit(ctx.children[1])
         self._check_automata_operation(expr)
-        # TODO RSM
         return Expression(
             tuple(set([(v.value, label.value, u.value) for v, label, u in expr.value])),
             SetType(),
@@ -311,11 +302,9 @@ class InterpretVisitor(QueryLanguageVisitor):
             result = tuple(set(left.value).intersection(set(right.value)))
             return Expression(result, SetType([types[el] for el in result]))
         if isinstance(left.type, FAType) and isinstance(right.type, FAType):
-            # return Expression(left.value.get_intersection(right.value), FAType())
             return Expression(
                 finite_automata_intersection(left.value, right.value), FAType()
             )
-        # TODO check for RSM
         if isinstance(left.type, RSMType) and isinstance(right.type, RSMType):
             raise Exception(
                 f"Statement - {self.statement_count}: Intersections for RSM is not supported"
@@ -339,7 +328,6 @@ class InterpretVisitor(QueryLanguageVisitor):
                 tuple([val for val, _ in result]),
                 SetType([type_ for _, type_ in result]),
             )
-        # TODO check for RSM
         if not (
             isinstance(left.type, AutomataType) and isinstance(right.type, AutomataType)
         ):
@@ -351,7 +339,9 @@ class InterpretVisitor(QueryLanguageVisitor):
             if isinstance(left.type, RSMType) or isinstance(right.type, RSMType)
             else FAType()
         )
-        return Expression((left.value.concatenate(right.value)).minimize(), result_type)
+        return Expression(
+            automatas_concat(left.value, right.value).minimize(), result_type
+        )
 
     def visitUnion(self, ctx: QueryLanguageParser.UnionContext):
         left = self.visit(ctx.children[1])
@@ -363,7 +353,6 @@ class InterpretVisitor(QueryLanguageVisitor):
             )
             result = tuple(set(left.value + right.value))
             return Expression(result, SetType([types[el] for el in result]))
-        # TODO check for RSM
         if not (
             isinstance(left.type, AutomataType) and isinstance(right.type, AutomataType)
         ):
@@ -375,14 +364,15 @@ class InterpretVisitor(QueryLanguageVisitor):
             if isinstance(left.type, RSMType) or isinstance(right.type, RSMType)
             else FAType()
         )
-        return Expression((left.value.union(right.value)).minimize(), result_type)
+        return Expression(
+            automatas_union(left.value, right.value).minimize(), result_type
+        )
 
     def visitStar(self, ctx: QueryLanguageParser.StarContext):
         automata_expr = self.visit(ctx.children[1])
-        # TODO check for RFA
         if isinstance(automata_expr.type, AutomataType):
             return Expression(
-                automata_expr.value.kleene_star().minimize(), automata_expr.type
+                automata_kleene_star(automata_expr.value).minimize(), automata_expr.type
             )
         raise Exception(
             f"Statement - {self.statement_count}: Can't apply kleene star to non automata"
