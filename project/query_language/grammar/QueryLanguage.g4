@@ -58,7 +58,7 @@ addStart: 'addStart ( ' expr ' ) ( ' expr ' )';
 addFinal: 'addFinal ( ' expr ' ) ( ' expr ' )';
 getStart: 'getStart ( ' expr ' )';
 getFinal: 'getFinal ( ' expr ' )';
-getReachable: 'getReachable ( ' expr ' )';
+getReachable: 'getReachable ( ' expr ' )' | 'getReachable ( ' expr ' ) ( ' expr ' )';
 getVertices: 'getVertices ( ' expr ' )';
 getEdges: 'getEdges ( ' expr ' )';
 getLabels: 'getLabels ( ' expr ' )';

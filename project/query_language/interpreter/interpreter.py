@@ -14,8 +14,8 @@ from project.query_language.grammar.parser import check_script_file_correct
 from project.query_language.interpreter.types import *
 from project.rpq.all_pairs import (
     finite_automata_intersection,
-    get_reachable_by_intersection,
     get_reachable_by_intersection_pairs,
+    regular_query_fa,
 )
 
 
@@ -127,9 +127,7 @@ class InterpretVisitor(QueryLanguageVisitor):
             for state in starts_expr.value:
                 new_fa.add_start_state(state)
             return Expression(new_fa, expr.type)
-        if starts_expr.type == SetType(
-            tuple([ListType([IntType(), SetType([StringType])])])
-        ):
+        if starts_expr.type == SetType():
             # TODO RSM
             return Expression(expr.value.set, RSMType())
         raise Exception(
@@ -188,7 +186,7 @@ class InterpretVisitor(QueryLanguageVisitor):
         expr = self.visit(ctx.children[1])
         self._check_automata_operation(expr)
         return Expression(
-            tuple([el.value for el in expr.value.start_states]), SetType([IntType()])
+            tuple([el.value for el in expr.value.start_states]), SetType()
         )
 
     def visitGetFinal(self, ctx: QueryLanguageParser.GetFinalContext):
@@ -196,15 +194,23 @@ class InterpretVisitor(QueryLanguageVisitor):
         self._check_automata_operation(expr)
         # TODO RSM
         return Expression(
-            tuple([el.value for el in expr.value.final_states]), SetType([IntType()])
+            tuple([el.value for el in expr.value.final_states]), SetType()
         )
 
     def visitGetReachable(self, ctx: QueryLanguageParser.GetReachableContext):
         expr = self.visit(ctx.children[1])
+        if len(ctx.children) == 4:
+            query_expr = self.visit(ctx.children[3])
+            self._check_automata_operation(expr)
+            self._check_automata_operation(query_expr)
+            return Expression(
+                tuple(set(regular_query_fa(query_expr.value, expr.value))),
+                SetType(),
+            )
         self._check_automata_operation(expr)
         return Expression(
             tuple(set(get_reachable_by_intersection_pairs(expr.value))),
-            SetType([ListType([IntType()])]),
+            SetType(),
         )
 
     def _check_automata_operation(self, expr: Expression):
@@ -217,9 +223,7 @@ class InterpretVisitor(QueryLanguageVisitor):
         expr = self.visit(ctx.children[1])
         self._check_automata_operation(expr)
         # TODO RSM
-        return Expression(
-            tuple([el.value for el in expr.value.states]), SetType([IntType()])
-        )
+        return Expression(tuple([el.value for el in expr.value.states]), SetType())
 
     def visitGetEdges(self, ctx: QueryLanguageParser.GetEdgesContext):
         expr = self.visit(ctx.children[1])
@@ -227,7 +231,7 @@ class InterpretVisitor(QueryLanguageVisitor):
         # TODO RSM
         return Expression(
             tuple(set([(v.value, label.value, u.value) for v, label, u in expr.value])),
-            SetType([IntType()]),
+            SetType(),
         )
 
     def visitGetLabels(self, ctx: QueryLanguageParser.GetLabelsContext):
@@ -235,7 +239,7 @@ class InterpretVisitor(QueryLanguageVisitor):
         self._check_automata_operation(expr)
         return Expression(
             tuple(map(lambda sym: sym.value, expr.value.symbols)),
-            SetType([StringType()]),
+            SetType(),
         )
 
     def visitMap(self, ctx: QueryLanguageParser.MapContext):
@@ -421,7 +425,7 @@ class InterpretVisitor(QueryLanguageVisitor):
 
     def visitSet(self, ctx: QueryLanguageParser.SetContext):
         if len(ctx.children) == 1:
-            return Expression(tuple(), SetType([]))
+            return Expression(tuple(), SetType())
         elements = set(self.visit(ctx.children[1]))
         visited = set()
         result = []

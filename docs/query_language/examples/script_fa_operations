@@ -56,3 +56,6 @@ print getReachable ( ( q2 & fa2 ) )
 print getReachable ( ( q2 & ( addFinal ( addStart ( fa2_cleared ) ( "0" ) ) ( "5" ) ) ) )
 
 print getReachable ( ( ( q1 & fa2 ) & fa2 ) )
+print getReachable ( ( ( fa2 & q1 ) & q1 ) )
+print getReachable ( ( fa2 & q1 ) ) ( q1 )
+print getReachable ( fa2 ) ( q1 )

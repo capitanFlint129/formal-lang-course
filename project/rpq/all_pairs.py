@@ -98,6 +98,13 @@ def regular_query_to_graph(
     graph_fa = automata.get_nondeterministic_automata_from_graph(
         graph, start_states, final_states
     )
+    return regular_query_fa(query_fa, graph_fa)
+
+
+def regular_query_fa(
+    query_fa: EpsilonNFA,
+    graph_fa: EpsilonNFA,
+) -> list[tuple]:
     states_order_query_fa = enumerate_states(query_fa)
     states_order_graph_fa = enumerate_states(graph_fa)
     intersection = finite_automata_intersection(
