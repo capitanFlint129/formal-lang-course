@@ -116,18 +116,19 @@ def get_reachable_by_intersection(intersection: EpsilonNFA) -> list[tuple]:
     )
 
     result = []
-    for start_state in intersection.start_states:
-        for final_state in intersection.final_states:
-            if transitive_closure[
-                intersection_states_order[start_state],
-                intersection_states_order[final_state],
-            ]:
-                result.append(
-                    (
-                        start_state.value[1],
-                        final_state.value[1],
+    if transitive_closure is not None:
+        for start_state in intersection.start_states:
+            for final_state in intersection.final_states:
+                if transitive_closure[
+                    intersection_states_order[start_state],
+                    intersection_states_order[final_state],
+                ]:
+                    result.append(
+                        (
+                            start_state.value[1],
+                            final_state.value[1],
+                        )
                     )
-                )
     return result
 
 
@@ -141,18 +142,19 @@ def get_reachable_by_intersection_pairs(intersection: EpsilonNFA) -> list[tuple]
     )
 
     result = []
-    for start_state in intersection.start_states:
-        for final_state in intersection.final_states:
-            if transitive_closure[
-                intersection_states_order[start_state],
-                intersection_states_order[final_state],
-            ]:
-                result.append(
-                    (
-                        start_state.value,
-                        final_state.value,
+    if transitive_closure is not None:
+        for start_state in intersection.start_states:
+            for final_state in intersection.final_states:
+                if transitive_closure[
+                    intersection_states_order[start_state],
+                    intersection_states_order[final_state],
+                ]:
+                    result.append(
+                        (
+                            start_state.value,
+                            final_state.value,
+                        )
                     )
-                )
     return result
 
 
@@ -215,10 +217,12 @@ def get_fa_from_boolean_decomposition(
 
 def get_transitive_closure_of_boolean_decomposition(
     boolean_decomposition: dict[str, dok_matrix]
-) -> csr_matrix:
+) -> Optional[csr_matrix]:
     """
     Creates transitive closure from boolean decomposition of finite automata
     """
+    if len(boolean_decomposition) == 0:
+        return None
     states_number = next(iter(boolean_decomposition.values())).shape[0]
     sum_of_matrices = dok_matrix((states_number, states_number), dtype=bool)
     for matrix in boolean_decomposition.values():

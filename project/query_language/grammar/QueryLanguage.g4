@@ -10,7 +10,7 @@ print: 'print ' expr;
 
 name: CHAR | '_' | name literal;
 
-string: '/' | '.' | ' ' | literal | string string;
+string: '/' | '.' | ' ' | ';' | literal | string string;
 
 literal: CHAR | DIGIT | '_';
 
@@ -39,6 +39,7 @@ expr:
   | getReachable
   | getVertices
   | getEdges
+  | getLabels
   | map
   | filter
   | load
@@ -60,6 +61,7 @@ getFinal: 'getFinal ( ' expr ' )';
 getReachable: 'getReachable ( ' expr ' )';
 getVertices: 'getVertices ( ' expr ' )';
 getEdges: 'getEdges ( ' expr ' )';
+getLabels: 'getLabels ( ' expr ' )';
 map: 'map ( ' lambda ' ) ( ' expr ' )';
 filter: 'filter ( ' lambda ' ) ( ' expr ' )';
 load: 'load ' stringVal;
