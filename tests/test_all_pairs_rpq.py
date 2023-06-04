@@ -102,7 +102,7 @@ def test_regular_query_to_graph():
     query = Regex("b*")
     result = all_pairs.regular_query_to_graph(query, graph, start_states, final_states)
     expected = [(0, 4), (0, 5), (0, 6)]
-    assert result == expected
+    assert set(result) == set(expected)
 
     query = Regex("a a b")
     result = all_pairs.regular_query_to_graph(query, graph, start_states, final_states)

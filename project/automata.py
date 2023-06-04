@@ -11,8 +11,6 @@ from pyformlang.finite_automaton import (
 )
 from pyformlang.regular_expression import Regex
 
-from project.recursive_finite_state_machines import RecursiveFiniteAutomaton
-
 
 class RFA:
     """
@@ -175,7 +173,7 @@ class RFA:
         # Not implemented because we skipped the task of implementing RFA intersection through tensors
         raise NotImplementedError()
 
-    def to_rsm(self) -> RecursiveFiniteAutomaton:
+    def to_rsm(self):
         raise NotImplementedError()
 
     def non_terminals(self) -> set[Symbol]:
