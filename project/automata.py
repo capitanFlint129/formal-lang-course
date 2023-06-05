@@ -18,9 +18,16 @@ class RFA:
     """
 
     def __init__(self, start_non_terminal: str = "S"):
-        self.nfa = Regex(start_non_terminal).to_epsilon_nfa()
+        # self.nfa = Regex(start_non_terminal).to_epsilon_nfa()
+        self.nfa = EpsilonNFA()
+        state0 = State("0")
+        state1 = State("1")
+        self.nfa.add_start_state(state0)
+        self.nfa.add_final_state(state1)
+        self.nfa.add_transition(state0, Symbol(start_non_terminal), state1)
         self.state_to_non_terminals = {
-            state: {start_non_terminal} for state in self.nfa.start_states
+            state: {start_non_terminal}
+            for state in self.nfa.start_states | self.nfa.final_states
         }
         self.start_non_terminal = start_non_terminal
 
@@ -83,7 +90,10 @@ class RFA:
         Concat RFA with other automata
         """
         res = RFA(self.start_non_terminal)
-        res.state_to_non_terminals = self.state_to_non_terminals.copy()
+        res.state_to_non_terminals = {
+            state: set(non_terminals)
+            for state, non_terminals in self.state_to_non_terminals.items()
+        }
         new_nfa = self.nfa.copy()
         if isinstance(other, EpsilonNFA):
             fa2 = other
@@ -117,7 +127,7 @@ class RFA:
                     res.state_to_non_terminals[start].add(res.start_non_terminal)
             for final in fa2.final_states:
                 res.state_to_non_terminals[new_states[final]] = {res.start_non_terminal}
-        res.nfa = new_nfa.minimize()
+        res.nfa = new_nfa
         return res
 
     def union(self, other: Union["RFA", EpsilonNFA]) -> "RFA":
@@ -125,7 +135,10 @@ class RFA:
         Union RFA with other automata
         """
         res = RFA(self.start_non_terminal)
-        res.state_to_non_terminals = self.state_to_non_terminals.copy()
+        res.state_to_non_terminals = {
+            state: set(non_terminals)
+            for state, non_terminals in self.state_to_non_terminals.items()
+        }
         new_nfa = self.nfa.copy()
         if isinstance(other, EpsilonNFA):
             fa2 = other
@@ -137,8 +150,7 @@ class RFA:
                 new_nfa.add_transition(new_states[src], label, new_states[dst])
             for final in fa2.final_states:
                 new_nfa.add_final_state(new_states[final])
-            for final in fa2.final_states:
-                res.state_to_non_terminals[final] = {res.start_non_terminal}
+                res.state_to_non_terminals[new_states[final]] = {res.start_non_terminal}
         elif isinstance(other, RFA):
             fa2 = other.nfa
             new_states = {state: State(str(state.value) + "_2") for state in fa2.states}
@@ -150,10 +162,11 @@ class RFA:
             for final in fa2.final_states:
                 new_nfa.add_final_state(new_states[final])
             for final in fa2.final_states:
-                res.state_to_non_terminals[final] = {res.start_non_terminal}
-            for state, non_terminals in other.state_to_non_terminals:
-                res.state_to_non_terminals[state] = non_terminals
-        res.nfa = new_nfa.minimize()
+                res.state_to_non_terminals[new_states[final]] = {res.start_non_terminal}
+            for state, non_terminals in other.state_to_non_terminals.items():
+                res.state_to_non_terminals[new_states[state]] = non_terminals
+        # res.nfa = new_nfa.minimize()
+        res.nfa = new_nfa
         return res
 
     def kleene_star(self) -> "RFA":
@@ -185,7 +198,9 @@ class RFA:
         )
 
 
-def automatas_concat(fa1: Union[EpsilonNFA, RFA], fa2: Union[EpsilonNFA, RFA]):
+def automatas_concat(
+    fa1: Union[EpsilonNFA, RFA], fa2: Union[EpsilonNFA, RFA]
+) -> Union[EpsilonNFA, RFA]:
     """
     Concat automatas
     """
@@ -193,21 +208,12 @@ def automatas_concat(fa1: Union[EpsilonNFA, RFA], fa2: Union[EpsilonNFA, RFA]):
         return fa1.concat(fa2)
     if isinstance(fa2, RFA):
         return fa2.concat(fa1)
-    res = fa1.copy()
-    new_states = {state: State(str(state.value) + "_2") for state in fa2.states}
-    new_finals = [new_states[st] for st in fa2.final_states]
-    for final in res.final_states:
-        for start in fa2.start_states:
-            res.add_transition(final, Symbol("$"), new_states[start])
-    res.final_states.clear()
-    for src, label, dst in fa2:
-        res.add_transition(new_states[src], label, new_states[dst])
-    for final in new_finals:
-        res.add_final_state(final)
-    return res.minimize()
+    return fa1.concatenate(fa2).minimize()
 
 
-def automatas_union(fa1: Union[EpsilonNFA, RFA], fa2: Union[EpsilonNFA, RFA]):
+def automatas_union(
+    fa1: Union[EpsilonNFA, RFA], fa2: Union[EpsilonNFA, RFA]
+) -> Union[EpsilonNFA, RFA]:
     """
     Union automatas
     """
@@ -215,29 +221,7 @@ def automatas_union(fa1: Union[EpsilonNFA, RFA], fa2: Union[EpsilonNFA, RFA]):
         return fa1.union(fa2)
     if isinstance(fa2, RFA):
         return fa2.union(fa1)
-    res = fa1.copy()
-    new_states = {state: State(str(state.value) + "_2") for state in fa2.states}
-    for start1 in res.start_states:
-        for start2 in fa2.start_states:
-            res.add_transition(start1, Symbol("$"), new_states[start2])
-    for src, label, dst in fa2:
-        res.add_transition(new_states[src], label, new_states[dst])
-    for final in fa2.final_states:
-        res.add_final_state(new_states[final])
-    return res.minimize()
-
-
-def automata_kleene_star(fa: Union[EpsilonNFA, RFA]):
-    """
-    Get kleene star for automata
-    """
-    if isinstance(fa, RFA):
-        return fa.kleene_star()
-    res = fa.copy()
-    for final in fa.final_states:
-        for start in fa.start_states:
-            fa.add_transition(final, Symbol("$"), start)
-    return res.minimize()
+    return fa1.union(fa2).minimize()
 
 
 def get_deterministic_automata_from_regex(regex: Regex) -> DeterministicFiniteAutomaton:
