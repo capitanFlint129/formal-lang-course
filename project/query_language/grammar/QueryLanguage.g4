@@ -72,7 +72,7 @@ star: '*' expr;
 smb: 'smb ' expr;
 brakets: '( ' expr ' )';
 in: '( ' expr ' ) in ' expr;
-listElement: '( ' expr ' )[ ' integer ' ]';
+listElement: '( ' expr ' )[ ' expr ' ]';
 
 list: '[]' | '[ ' elements ' ]' | '[ ' range ' ]';
 
