@@ -612,7 +612,7 @@ def test_output_lambdas_map_filter(script, expected, capsys):
                 [
                     'q1_ = ( smb "a" ++ smb "b" )',
                     'q1 = setFinal ( setStart ( q1_ ) ( { "0;4;5" } ) ) ( { "1" } )',
-                    'fa2 = load "example.dot"',
+                    'fa2 = load "tests/query_language/interpreter/data/example_graph.dot"',
                     "",
                     "print getReachable ( ( q1 & fa2 ) )",
                     "print getReachable ( ( q1 & ( setStart ( fa2 ) ( {} ) ) ) )",

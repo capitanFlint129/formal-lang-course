@@ -250,7 +250,11 @@ def test_fa():
         ),
         ("fa1_18", "getReachable ( setStart ( fa1 ) ( { 0, 1 } ) )", set()),
         ("fa1_19", "getReachable ( setFinal ( fa1 ) ( { 0, 1 } ) )", set()),
-        ("fa2", 'load "example.dot"', ["aaa", "a", "aab", "aaabbb"]),
+        (
+            "fa2",
+            'load "tests/query_language/interpreter/data/example_graph.dot"',
+            ["aaa", "a", "aab", "aaabbb"],
+        ),
         (
             "fa2_1",
             "getStart ( fa2 )",

@@ -153,7 +153,11 @@ def test_fa():
         ("fa1_17", "getLabels ( setFinal ( fa1 ) ( { 0, 1 } ) )", SetType),
         ("fa1_18", "getReachable ( setStart ( fa1 ) ( { 0, 1 } ) )", SetType),
         ("fa1_19", "getReachable ( setFinal ( fa1 ) ( { 0, 1 } ) )", SetType),
-        ("fa2", 'load "example.dot"', FAType),
+        (
+            "fa2",
+            'load "tests/query_language/interpreter/data/example_graph.dot"',
+            FAType,
+        ),
         ("fa2_1", "getStart ( fa2 )", SetType),
         ("fa2_2", "getFinal ( fa2 )", SetType),
         ("fa2_3", "getVertices ( fa2 )", SetType),
