@@ -8,6 +8,7 @@ from pyformlang.finite_automaton import (
     EpsilonNFA,
     Symbol,
     State,
+    Epsilon,
 )
 from pyformlang.regular_expression import Regex
 
@@ -101,7 +102,7 @@ class RFA:
             new_finals = [new_states[st] for st in fa2.final_states]
             for final in new_nfa.final_states:
                 for start in fa2.start_states:
-                    new_nfa.add_transition(final, Symbol("$"), new_states[start])
+                    new_nfa.add_transition(final, Epsilon(), new_states[start])
             new_nfa.final_states.clear()
             for src, label, dst in fa2:
                 new_nfa.add_transition(new_states[src], label, new_states[dst])
@@ -115,18 +116,47 @@ class RFA:
             new_finals = [new_states[st] for st in fa2.final_states]
             for final in new_nfa.final_states:
                 for start in fa2.start_states:
-                    new_nfa.add_transition(final, Symbol("$"), new_states[start])
+                    new_nfa.add_transition(final, Epsilon(), new_states[start])
             new_nfa.final_states.clear()
             for src, label, dst in fa2:
+                if label == other.start_non_terminal:
+                    label = str(other.start_non_terminal) + "_2"
                 new_nfa.add_transition(new_states[src], label, new_states[dst])
             for final in new_finals:
                 new_nfa.add_final_state(final)
-            res.start_non_terminal = str(self.start_non_terminal) + "_2"
             for start in new_nfa.start_states:
                 if self.start_non_terminal in self.state_to_non_terminals[start]:
                     res.state_to_non_terminals[start].add(res.start_non_terminal)
             for final in fa2.final_states:
                 res.state_to_non_terminals[new_states[final]] = {res.start_non_terminal}
+        res.nfa = new_nfa
+        return res
+
+    def rev_concat(self, other: EpsilonNFA) -> "RFA":
+        """
+        Concat RFA with nfa in reversed case
+        """
+        res = RFA(str(self.start_non_terminal) + "_2")
+        res.state_to_non_terminals = {
+            state: set(non_terminals)
+            for state, non_terminals in self.state_to_non_terminals.items()
+        }
+        for final in res.nfa.final_states:
+            res.state_to_non_terminals[final] = {res.start_non_terminal}
+        new_nfa = self.nfa.copy()
+        fa2 = other
+        new_states = {state: State(str(state.value) + "_2") for state in fa2.states}
+        new_starts = [new_states[st] for st in fa2.start_states]
+        for start in new_nfa.start_states:
+            for final in fa2.final_states:
+                new_nfa.add_transition(new_states[final], Epsilon(), start)
+        new_nfa.start_states.clear()
+        for src, label, dst in fa2:
+            new_nfa.add_transition(new_states[src], label, new_states[dst])
+        for start in new_starts:
+            new_nfa.add_start_state(start)
+        for start in fa2.start_states:
+            res.state_to_non_terminals[new_states[start]] = {res.start_non_terminal}
         res.nfa = new_nfa
         return res
 
@@ -145,7 +175,7 @@ class RFA:
             new_states = {state: State(str(state.value) + "_2") for state in fa2.states}
             for start1 in new_nfa.start_states:
                 for start2 in fa2.start_states:
-                    new_nfa.add_transition(start1, Symbol("$"), new_states[start2])
+                    new_nfa.add_transition(start1, Epsilon(), new_states[start2])
             for src, label, dst in fa2:
                 new_nfa.add_transition(new_states[src], label, new_states[dst])
             for final in fa2.final_states:
@@ -156,7 +186,7 @@ class RFA:
             new_states = {state: State(str(state.value) + "_2") for state in fa2.states}
             for start1 in new_nfa.start_states:
                 for start2 in fa2.start_states:
-                    new_nfa.add_transition(start1, Symbol("$"), new_states[start2])
+                    new_nfa.add_transition(start1, Epsilon(), new_states[start2])
             for src, label, dst in fa2:
                 new_nfa.add_transition(new_states[src], label, new_states[dst])
             for final in fa2.final_states:
@@ -179,7 +209,7 @@ class RFA:
             if self.start_non_terminal in self.state_to_non_terminals[final]:
                 for start in self.nfa.start_states:
                     if self.start_non_terminal in self.state_to_non_terminals[start]:
-                        self.nfa.add_transition(final, Symbol("$"), start)
+                        self.nfa.add_transition(final, Epsilon(), start)
         return res
 
     def intersect(self, other: EpsilonNFA):
@@ -207,7 +237,7 @@ def automatas_concat(
     if isinstance(fa1, RFA):
         return fa1.concat(fa2)
     if isinstance(fa2, RFA):
-        return fa2.concat(fa1)
+        return fa2.rev_concat(fa1)
     return fa1.concatenate(fa2).minimize()
 
 
