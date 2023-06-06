@@ -1,4 +1,8 @@
 class Type:
+    """
+    Base class for query language types
+    """
+
     def __eq__(self, other):
         return isinstance(other, Type) and self.__class__ == other.__class__
 
@@ -19,6 +23,10 @@ class BoolType(Type):
 
 
 class AutomataType(Type):
+    """
+    Base class for query language automata types
+    """
+
     pass
 
 
@@ -31,6 +39,10 @@ class RSMType(AutomataType):
 
 
 class ContainerType(Type):
+    """
+    Base class for query language container types
+    """
+
     def __init__(self, params=None):
         self.params: tuple[Type] = params or []
 
