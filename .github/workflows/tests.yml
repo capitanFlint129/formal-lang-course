@@ -22,7 +22,7 @@ jobs:
           pip install -r requirements.txt
       - name: Test with pytest
         run: |
-          (cd project/query_language/grammar -visitor && antlr4 QueryLanguage.g4 -Dlanguage=Python3)
+          (cd project/query_language/grammar && antlr4 QueryLanguage.g4 -visitor -Dlanguage=Python3)
           pip install pytest
           pip install pytest-cov
           pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
