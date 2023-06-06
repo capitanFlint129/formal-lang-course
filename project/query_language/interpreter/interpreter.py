@@ -34,7 +34,4 @@ class Interpreter:
         parser = QueryLanguageParser(stream)
         tree = parser.prog()
         visitor = InterpretVisitor(self.file)
-        try:
-            visitor.visit(tree)
-        except Exception as e:
-            raise Exception(f"Statement - {visitor.statement_count}: {e}")
+        visitor.visit(tree)

@@ -13,6 +13,23 @@ from project.rpq.all_pairs import (
 )
 
 
+class InterpretException(Exception):
+    def __init__(self, statement, msg):
+        self.statement = statement
+        self.msg = msg
+
+    def __str__(self):
+        return f"Statement - {self.statement}: {self.msg}"
+
+
+class UnknownVariable(InterpretException):
+    pass
+
+
+class TypesException(InterpretException):
+    pass
+
+
 class Expression:
     def __init__(self, value: typing.Any, expr_type: Type):
         self.value = value
@@ -48,7 +65,7 @@ class InterpretVisitor(QueryLanguageVisitor):
 
     def _exit_frame(self):
         if len(self.frames) == 0:
-            raise Exception(f"Statement - {self.statement_count}: Bad frames state")
+            raise InterpretException(self.statement_count, "Bad frames state")
         self.cur_frame = self.frames[-1]
         self.frames = self.frames[:-1]
 
@@ -59,11 +76,17 @@ class InterpretVisitor(QueryLanguageVisitor):
     def visitDeclaration(self, ctx: QueryLanguageParser.DeclarationContext):
         var_name = ctx.children[0].getText()
         if self._get_value(var_name) is not None:
-            raise Exception(
-                f"Statement - {self.statement_count}: Redeclaring a variable"
-            )
-        self._set_value(var_name, Expression(RFA(), RSMType()))
-        expr = self.visit(ctx.children[2])
+            raise InterpretException(self.statement_count, "Redeclaring a variable")
+        try:
+            expr = self.visit(ctx.children[2])
+        except UnknownVariable:
+            self._set_value(var_name, Expression(RFA(), RSMType()))
+            expr = self.visit(ctx.children[2])
+            if not isinstance(expr.type, RSMType):
+                raise InterpretException(
+                    self.statement_count,
+                    f"Recursion allowed only for RSM, not for {expr.type}",
+                )
         self._set_value(var_name, expr)
 
     def visitPrint(self, ctx: QueryLanguageParser.PrintContext):
@@ -81,9 +104,7 @@ class InterpretVisitor(QueryLanguageVisitor):
         var_name = ctx.getText()
         value = self._get_value(var_name)
         if value is None:
-            raise Exception(
-                f"Statement - {self.statement_count}: Unknown name - {var_name}"
-            )
+            raise UnknownVariable(self.statement_count, f"Unknown name - {var_name}")
         return value
 
     def visitStringVal(self, ctx: QueryLanguageParser.StringValContext):
@@ -107,10 +128,8 @@ class InterpretVisitor(QueryLanguageVisitor):
             for state in starts_expr.value:
                 new_fa.add_start_state(state)
             return Expression(new_fa, expr.type)
-        if starts_expr.type == SetType():
-            return Expression(expr.value.set, RSMType())
-        raise Exception(
-            f"Statement - {self.statement_count}: States can't defined as {starts_expr.type}"
+        raise TypesException(
+            self.statement_count, "States can't defined as {starts_expr.type}"
         )
 
     def visitSetFinal(self, ctx: QueryLanguageParser.SetFinalContext):
@@ -127,8 +146,8 @@ class InterpretVisitor(QueryLanguageVisitor):
         #     tuple([ListType([IntType(), SetType([StringType])])])
         # ):
         #     return Expression(expr.value.set, RSMType())
-        raise Exception(
-            f"Statement - {self.statement_count}: States can't defined as {finals_expr.type}"
+        raise TypesException(
+            self.statement_count, "States can't defined as {finals_expr.type}"
         )
 
     def visitAddStart(self, ctx: QueryLanguageParser.AddStartContext):
@@ -190,8 +209,8 @@ class InterpretVisitor(QueryLanguageVisitor):
 
     def _check_automata_operation(self, expr: Expression):
         if not isinstance(expr.type, AutomataType):
-            raise Exception(
-                f"Statement - {self.statement_count}: Can't apply automata operation to non automata"
+            raise TypesException(
+                self.statement_count, "Can't apply automata operation to non automata"
             )
 
     def visitGetVertices(self, ctx: QueryLanguageParser.GetVerticesContext):
@@ -218,13 +237,13 @@ class InterpretVisitor(QueryLanguageVisitor):
     def visitMap(self, ctx: QueryLanguageParser.MapContext):
         container_expr = self.visit(ctx.children[3])
         if not isinstance(container_expr.type, ContainerType):
-            raise Exception(
-                f"Statement - {self.statement_count}: Can't map lambda to {container_expr.type}"
+            raise TypesException(
+                self.statement_count, "Can't map lambda to {container_expr.type}"
             )
         lambda_func = self.visit(ctx.children[1])
         if len(lambda_func.args) != 1:
-            raise Exception(
-                f"Statement - {self.statement_count}: Wrong number of parameters in lambda"
+            raise InterpretException(
+                self.statement_count, "Wrong number of parameters in lambda"
             )
         self._enter_frame()
         result = []
@@ -240,13 +259,13 @@ class InterpretVisitor(QueryLanguageVisitor):
     def visitFilter(self, ctx: QueryLanguageParser.FilterContext):
         container_expr = self.visit(ctx.children[3])
         if not isinstance(container_expr.type, ContainerType):
-            raise Exception(
-                f"Statement - {self.statement_count}: Can't map lambda to {container_expr.type}"
+            raise TypesException(
+                self.statement_count, f"Can't map lambda to {container_expr.type}"
             )
         lambda_func = self.visit(ctx.children[1])
         if len(lambda_func.args) != 1:
-            raise Exception(
-                f"Statement - {self.statement_count}: Wrong number of parameters in lambda"
+            raise InterpretException(
+                self.statement_count, f"Wrong number of parameters in lambda"
             )
         self._enter_frame()
         result = []
@@ -255,8 +274,9 @@ class InterpretVisitor(QueryLanguageVisitor):
             self._set_value(lambda_func.args[0], Expression(el, el_type))
             is_accepted = self.visit(lambda_func.expr_ctx)
             if not isinstance(is_accepted.type, BoolType):
-                raise Exception(
-                    f"Statement - {self.statement_count}: Filter accepts lambda which returns bool value"
+                raise InterpretException(
+                    self.statement_count,
+                    f"Filter accepts lambda which returns bool value",
                 )
             if is_accepted.value:
                 result.append(el)
@@ -270,7 +290,7 @@ class InterpretVisitor(QueryLanguageVisitor):
             graph = load_graph_from_dot(path_expr.value)
             fa = get_nondeterministic_automata_from_graph(graph)
         except Exception:
-            raise Exception(f"Statement - {self.statement_count}: Can't load graph")
+            raise InterpretException(self.statement_count, "Can't load graph")
         return Expression(fa, FAType())
 
     def visitIntersect(self, ctx: QueryLanguageParser.IntersectContext):
@@ -288,15 +308,15 @@ class InterpretVisitor(QueryLanguageVisitor):
                 finite_automata_intersection(left.value, right.value), FAType()
             )
         if isinstance(left.type, RSMType) and isinstance(right.type, RSMType):
-            raise Exception(
-                f"Statement - {self.statement_count}: Intersections for RSM is not supported"
+            raise InterpretException(
+                self.statement_count, f"Intersections for RSM is not supported"
             )
         if isinstance(left.type, RSMType) or isinstance(right.type, RSMType):
-            raise Exception(
-                f"Statement - {self.statement_count}: Intersections for RSM is not implemented"
+            raise InterpretException(
+                self.statement_count, f"Intersections for RSM is not implemented"
             )
-        raise Exception(
-            f"Statement - {self.statement_count}: Intersection possible only for automata and set"
+        raise TypesException(
+            self.statement_count, f"Intersection possible only for automata and set"
         )
 
     def visitConcat(self, ctx: QueryLanguageParser.ConcatContext):
@@ -308,13 +328,13 @@ class InterpretVisitor(QueryLanguageVisitor):
             )
             return Expression(
                 tuple([val for val, _ in result]),
-                SetType([type_ for _, type_ in result]),
+                ListType([type_ for _, type_ in result]),
             )
         if not (
             isinstance(left.type, AutomataType) and isinstance(right.type, AutomataType)
         ):
-            raise Exception(
-                f"Statement - {self.statement_count}: Concat possible only for automata and list"
+            raise TypesException(
+                self.statement_count, f"Concat possible only for automatas or lists"
             )
         result_type = (
             RSMType()
@@ -336,8 +356,8 @@ class InterpretVisitor(QueryLanguageVisitor):
         if not (
             isinstance(left.type, AutomataType) and isinstance(right.type, AutomataType)
         ):
-            raise Exception(
-                f"Statement - {self.statement_count}: Union possible only for automata and set"
+            raise TypesException(
+                self.statement_count, f"Union possible only for automatas or sets"
             )
         result_type = (
             RSMType()
@@ -350,33 +370,38 @@ class InterpretVisitor(QueryLanguageVisitor):
         automata_expr = self.visit(ctx.children[1])
         if isinstance(automata_expr.type, AutomataType):
             return Expression(automata_expr.value.kleene_star(), automata_expr.type)
-        raise Exception(
-            f"Statement - {self.statement_count}: Can't apply kleene star to non automata"
+        raise TypesException(
+            self.statement_count, f"Can't apply kleene star to non automata"
         )
 
     def visitSmb(self, ctx: QueryLanguageParser.SmbContext):
         expr = self.visit(ctx.children[1])
         if expr.type != StringType():
-            raise Exception(
-                f"Statement - {self.statement_count}: Automatas with non string labels are forbidden"
+            raise TypesException(
+                self.statement_count, f"Automatas with non string labels are forbidden"
             )
         return Expression(Regex(expr.value).to_epsilon_nfa().minimize(), FAType())
 
     def visitIn(self, ctx: QueryLanguageParser.InContext):
         expr = self.visit(ctx.children[1])
         container_expr = self.visit(ctx.children[3])
+        if not isinstance(container_expr.type, ContainerType):
+            raise TypesException(
+                self.statement_count,
+                f"'in' operator works for containers not for {container_expr.type}",
+            )
         return Expression(expr.value in container_expr.value, BoolType())
 
     def visitListElement(self, ctx: QueryLanguageParser.ListElementContext):
         listExpr = self.visit(ctx.children[1])
         expr = self.visit(ctx.children[3])
         if not isinstance(listExpr.type, ListType):
-            raise Exception(
-                f"Statement - {self.statement_count}: {listExpr.type} is not subscriptable"
+            raise TypesException(
+                self.statement_count, f"{listExpr.type} is not subscriptable"
             )
-        if expr.type != IntType():
-            raise Exception(
-                f"Statement - {self.statement_count}: List indices must be integers, not {expr.type}"
+        if not isinstance(expr.type, IntType):
+            raise TypesException(
+                self.statement_count, f"List indices must be integers, not {expr.type}"
             )
         return Expression(listExpr.value[expr.value], listExpr.type.params[expr.value])
 
