@@ -14,6 +14,10 @@ from project.rpq.all_pairs import (
 
 
 class InterpretException(Exception):
+    """
+    Base exception for interpretation
+    """
+
     def __init__(self, statement, msg):
         self.statement = statement
         self.msg = msg
@@ -23,6 +27,10 @@ class InterpretException(Exception):
 
 
 class UnknownVariable(InterpretException):
+    """
+    Exception for undefined variable usage
+    """
+
     pass
 
 

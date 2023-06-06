@@ -105,6 +105,9 @@ def regular_query_fa(
     query_fa: EpsilonNFA,
     graph_fa: EpsilonNFA,
 ) -> list[tuple]:
+    """
+    Executes regular query to the given graph, when graph and query are prepared finite automatas
+    """
     states_order_query_fa = enumerate_states(query_fa)
     states_order_graph_fa = enumerate_states(graph_fa)
     intersection = finite_automata_intersection(
@@ -114,6 +117,9 @@ def regular_query_fa(
 
 
 def get_reachable_by_intersection(intersection: EpsilonNFA) -> list[tuple]:
+    """
+    Extracts reachable vertices from graph from intersection of query fa and graph fa
+    """
     intersection_states_order = enumerate_states(intersection)
     intersection_boolean_decomposition = get_boolean_decomposition_of_fa(
         intersection, intersection_states_order
@@ -140,6 +146,10 @@ def get_reachable_by_intersection(intersection: EpsilonNFA) -> list[tuple]:
 
 
 def get_reachable_by_intersection_pairs(intersection: EpsilonNFA) -> list[tuple]:
+    """
+    Extracts reachable vertices from graph from intersection of query fa and graph fa,
+    but returns pairs from states of intersection
+    """
     intersection_states_order = enumerate_states(intersection)
     intersection_boolean_decomposition = get_boolean_decomposition_of_fa(
         intersection, intersection_states_order

@@ -12,6 +12,10 @@ from project.query_language.interpreter.interpret_visitor import InterpretVisito
 
 
 class Interpreter:
+    """
+    Class for query language scripts execution
+    """
+
     def __init__(self, file=None):
         if file is None:
             self.file = sys.stdout
@@ -19,13 +23,19 @@ class Interpreter:
             self.file = file
 
     def execute_from_path(self, path: str):
+        """
+        Method for executing script from file
+        """
         if not check_script_file_correct(path):
-            return
+            raise Exception("Parse error")
         self._interpret_stream(FileStream(path))
 
     def execute_script(self, script: str):
+        """
+        Method for executing script from string
+        """
         if not check_script_correct(script):
-            return
+            raise Exception("Parse error")
         self._interpret_stream(InputStream(script))
 
     def _interpret_stream(self, input_stream):
