@@ -39,13 +39,6 @@ def test_no_output(script, capsys):
     assert captured.err == ""
 
 
-# def test_no_output_big_script(capsys, interpreter):
-#     interpreter.execute_from_path('tests/data/query_language/big_script_no_print')
-#     captured = capsys.readouterr()
-#     assert captured.out == ""
-#     assert captured.err == ""
-
-
 @pytest.mark.parametrize(
     "script, expected",
     [
