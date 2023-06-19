@@ -1,7 +1,7 @@
 from pyformlang.cfg import CFG, Variable
 
 from project.cfpq import matrix
-from project.grapth_utils import create_two_cycles_graph
+from project.graph_utils import create_two_cycles_graph
 
 
 def test_get_reachable_pairs_matrix():

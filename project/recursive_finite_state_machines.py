@@ -1,6 +1,6 @@
+import re
 from collections import defaultdict
 from typing import AbstractSet
-import re
 
 from pyformlang.cfg import CFG, Variable, Terminal
 from pyformlang.finite_automaton import NondeterministicFiniteAutomaton

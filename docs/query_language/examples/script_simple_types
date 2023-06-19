@@ -1,0 +1,28 @@
+a = 1
+b = 2
+c = -2
+d = 10000000000
+e = a
+f = e
+
+print a
+print ( ( a ) )
+print b
+print c
+print d
+print e
+print f
+
+s = "aaaaa"
+q = ""
+r = "One. Two three. /Four  "
+
+print s
+print q
+print r
+
+___s__A_ = False
+A___s__A_ = True
+
+print ___s__A_
+print A___s__A_

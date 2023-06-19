@@ -1,0 +1,28 @@
+a = [ 1, 2, 3, 4, 5, 6 ]
+a_set = { 1..7 }
+
+print map ( \el -> el ) ( a )
+print map ( \el -> el ) ( a_set )
+
+print map ( \el -> 1 ) ( a )
+print map ( \el -> 1 ) ( a_set )
+
+print map ( \el -> "" ) ( a )
+print map ( \el -> "a" ) ( a_set )
+
+print map ( \el -> [ a ] ) ( a )
+print map ( \el -> { a_set } ) ( a_set )
+
+b = [ a, 1, "a", { "", "a", "b" } ]
+print map ( \el -> el ) ( b )
+c = map ( \el -> el ) ( b )
+print c
+
+aa = { 1, 2, 3, [ 1, 2, 3 ] }
+g = filter ( \el -> ( el ) in aa ) ( a )
+print g
+
+print filter ( \el -> ( el ) in aa ) ( { [ 1, 2, 3 ], [ 1, 2, 3 ] } )
+
+bb = { "" }
+print filter ( \el -> ( el ) in bb ) ( map ( \el -> "" ) ( a ) )

@@ -1,0 +1,61 @@
+fa1 = smb "aaa"
+print getStart ( fa1 )
+print getFinal ( fa1 )
+print getVertices ( fa1 )
+print getEdges ( fa1 )
+print getLabels ( fa1 )
+print getReachable ( fa1 )
+
+
+print getStart ( setStart ( fa1 ) ( { 0, 1 } ) )
+print getStart ( setFinal ( fa1 ) ( { 0, 1 } ) )
+
+print getFinal ( setStart ( fa1 ) ( { 0, 1 } ) )
+print getFinal ( setFinal ( fa1 ) ( { 0, 1 } ) )
+
+print getVertices ( setStart ( fa1 ) ( { 0, 1 } ) )
+print getVertices ( setFinal ( fa1 ) ( { 0, 1 } ) )
+print getEdges ( setStart ( fa1 ) ( { 0, 1 } ) )
+print getEdges ( setFinal ( fa1 ) ( { 0, 1 } ) )
+print getLabels ( setStart ( fa1 ) ( { 0, 1 } ) )
+print getLabels ( setFinal ( fa1 ) ( { 0, 1 } ) )
+print getReachable ( setStart ( fa1 ) ( { 0, 1 } ) )
+print getReachable ( setFinal ( fa1 ) ( { 0, 1 } ) )
+
+print ""
+print ""
+
+fa2 = load "docs/query_language/examples/example.dot"
+
+print getStart ( fa2 )
+print getFinal ( fa2 )
+print getVertices ( fa2 )
+print getEdges ( fa2 )
+print getLabels ( fa2 )
+print getReachable ( fa2 )
+
+q1_ = ( smb "a" ++ smb "b" )
+print q1_
+print getStart ( q1_ )
+print getFinal ( q1_ )
+
+q1 = setFinal ( setStart ( q1_ ) ( { "0;4;5" } ) ) ( { "1" } )
+print q1
+print getStart ( q1 )
+print getFinal ( q1 )
+
+
+print getReachable ( ( q1 & fa2 ) )
+print getReachable ( ( q1 & ( setStart ( fa2 ) ( {} ) ) ) )
+print getReachable ( ( q1 & fa2 ) )
+print getReachable ( ( q1 & ( setStart ( fa2 ) ( getVertices ( fa2 ) ) ) ) )
+
+fa2_cleared = setFinal ( setStart ( fa2 ) ( {} ) ) ( {} )
+q2 = ( *( smb "a" ) ++ *( smb "b" ) )
+print getReachable ( ( q2 & fa2 ) )
+print getReachable ( ( q2 & ( addFinal ( addStart ( fa2_cleared ) ( "0" ) ) ( "5" ) ) ) )
+
+print getReachable ( ( ( q1 & fa2 ) & fa2 ) )
+print getReachable ( ( ( fa2 & q1 ) & q1 ) )
+print getReachable ( ( fa2 & q1 ) ) ( q1 )
+print getReachable ( fa2 ) ( q1 )

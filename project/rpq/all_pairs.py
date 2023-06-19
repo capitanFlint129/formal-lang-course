@@ -1,19 +1,20 @@
 from typing import Optional
 
+import networkx as nx
+from pyformlang.finite_automaton import EpsilonNFA
 from pyformlang.regular_expression import Regex
 from scipy.sparse import kron
-import networkx as nx
 
 from project import automata
 from project.boolean_decomposition import *
 
 
 def finite_automata_intersection(
-    fa1: NondeterministicFiniteAutomaton,
-    fa2: NondeterministicFiniteAutomaton,
+    fa1: EpsilonNFA,
+    fa2: EpsilonNFA,
     states_order_fa_1: Optional[dict[State, int]] = None,
     states_order_fa_2: Optional[dict[State, int]] = None,
-) -> NondeterministicFiniteAutomaton:
+) -> EpsilonNFA:
     """
     Builds intersection of two finite automata through the tensor product
 
@@ -44,6 +45,12 @@ def finite_automata_intersection(
                     fa2_boolean_decomposition[symbol.value],
                 )
             )
+    states_mapping = {
+        states_order_fa_1[state1] * len(fa2.states)
+        + states_order_fa_2[state2]: (state1.value, state2.value)
+        for state1 in fa1.states
+        for state2 in fa2.states
+    }
     result_fa = get_fa_from_boolean_decomposition(
         result_boolean_decomposition,
         [
@@ -56,6 +63,7 @@ def finite_automata_intersection(
             for state1 in fa1.final_states
             for state2 in fa2.final_states
         ],
+        states_mapping,
     )
     return result_fa
 
@@ -90,12 +98,28 @@ def regular_query_to_graph(
     graph_fa = automata.get_nondeterministic_automata_from_graph(
         graph, start_states, final_states
     )
+    return regular_query_fa(query_fa, graph_fa)
+
+
+def regular_query_fa(
+    query_fa: EpsilonNFA,
+    graph_fa: EpsilonNFA,
+) -> list[tuple]:
+    """
+    Executes regular query to the given graph, when graph and query are prepared finite automatas
+    """
     states_order_query_fa = enumerate_states(query_fa)
     states_order_graph_fa = enumerate_states(graph_fa)
     intersection = finite_automata_intersection(
         query_fa, graph_fa, states_order_query_fa, states_order_graph_fa
     )
+    return get_reachable_by_intersection(intersection)
 
+
+def get_reachable_by_intersection(intersection: EpsilonNFA) -> list[tuple]:
+    """
+    Extracts reachable vertices from graph from intersection of query fa and graph fa
+    """
     intersection_states_order = enumerate_states(intersection)
     intersection_boolean_decomposition = get_boolean_decomposition_of_fa(
         intersection, intersection_states_order
@@ -105,27 +129,58 @@ def regular_query_to_graph(
     )
 
     result = []
-    for start_state in intersection.start_states:
-        for final_state in intersection.final_states:
-            if transitive_closure[
-                intersection_states_order[start_state],
-                intersection_states_order[final_state],
-            ]:
-                result.append(
-                    (
-                        start_state.value % len(graph_fa.states),
-                        final_state.value % len(graph_fa.states),
+    if transitive_closure is not None:
+        for start_state in intersection.start_states:
+            for final_state in intersection.final_states:
+                if transitive_closure[
+                    intersection_states_order[start_state],
+                    intersection_states_order[final_state],
+                ]:
+                    result.append(
+                        (
+                            start_state.value[1],
+                            final_state.value[1],
+                        )
                     )
-                )
     return result
 
 
-def enumerate_states(fa: NondeterministicFiniteAutomaton) -> dict[State, int]:
+def get_reachable_by_intersection_pairs(intersection: EpsilonNFA) -> list[tuple]:
+    """
+    Extracts reachable vertices from graph from intersection of query fa and graph fa,
+    but returns pairs from states of intersection
+    """
+    intersection_states_order = enumerate_states(intersection)
+    intersection_boolean_decomposition = get_boolean_decomposition_of_fa(
+        intersection, intersection_states_order
+    )
+    transitive_closure = get_transitive_closure_of_boolean_decomposition(
+        intersection_boolean_decomposition
+    )
+
+    result = []
+    if transitive_closure is not None:
+        for start_state in intersection.start_states:
+            for final_state in intersection.final_states:
+                if transitive_closure[
+                    intersection_states_order[start_state],
+                    intersection_states_order[final_state],
+                ]:
+                    result.append(
+                        (
+                            start_state.value,
+                            final_state.value,
+                        )
+                    )
+    return result
+
+
+def enumerate_states(fa: EpsilonNFA) -> dict[State, int]:
     return {state: i for i, state in enumerate(fa.states)}
 
 
 def get_boolean_decomposition_of_fa(
-    fa: NondeterministicFiniteAutomaton,
+    fa: EpsilonNFA,
     states_order_fa: dict[State, int],
 ) -> dict[str, dok_matrix]:
     """
@@ -152,34 +207,39 @@ def get_fa_from_boolean_decomposition(
     boolean_decomposition: dict[Symbol, dok_matrix],
     start_states: Iterable[int],
     final_states: Iterable[int],
-) -> NondeterministicFiniteAutomaton:
+    states_mapping: Optional[dict[int, State]] = None,
+) -> EpsilonNFA:
     """
     Creates finite automata from boolean decomposition, start states and final states
     """
-    result_fa = NondeterministicFiniteAutomaton()
+    result_fa = EpsilonNFA()
     if len(boolean_decomposition) == 0:
         return result_fa
     states_number = next(iter(boolean_decomposition.values())).shape[0]
     states = [State(i) for i in range(states_number)]
     for state_index in start_states:
-        result_fa.add_start_state(states[state_index])
+        result_fa.add_start_state(states_mapping[state_index])
     for state_index in final_states:
-        result_fa.add_final_state(states[state_index])
+        result_fa.add_final_state(states_mapping[state_index])
     for symbol, symbol_boolean_matrix in boolean_decomposition.items():
         symbol_object = Symbol(symbol)
         for states_pair, value in symbol_boolean_matrix.items():
-            if value == True:
+            if value:
                 src, dst = states_pair
-                result_fa.add_transition(states[src], symbol_object, states[dst])
+                result_fa.add_transition(
+                    states_mapping[src], symbol_object, states_mapping[dst]
+                )
     return result_fa
 
 
 def get_transitive_closure_of_boolean_decomposition(
     boolean_decomposition: dict[str, dok_matrix]
-) -> csr_matrix:
+) -> Optional[csr_matrix]:
     """
     Creates transitive closure from boolean decomposition of finite automata
     """
+    if len(boolean_decomposition) == 0:
+        return None
     states_number = next(iter(boolean_decomposition.values())).shape[0]
     sum_of_matrices = dok_matrix((states_number, states_number), dtype=bool)
     for matrix in boolean_decomposition.values():

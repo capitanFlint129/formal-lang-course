@@ -9,7 +9,7 @@ from project.weak_chomsky_normal_form import (
     read_grammar_from_file,
 )
 from project.boolean_decomposition import *
-from project.grapth_utils import get_number_of_nodes
+from project.graph_utils import get_number_of_nodes
 from scipy.sparse import dok_matrix
 
 

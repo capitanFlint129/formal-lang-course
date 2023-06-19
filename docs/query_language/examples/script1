@@ -1,0 +1,21 @@
+g_ = load docs/query_language/examples/example.dot
+g = setStart ( setFinal ( g_ ) ( getVertices ( g_ ) ) ) ( { 0..100 } )
+
+l1 = ( smb "l1" | smb "l2" )
+
+q1 = *( "type" | l1 )
+q2 = ( smb "sub_class_of" ++ l1 )
+
+res1 = ( g & q1 )
+res2 = ( g & q2 )
+
+print res1
+
+s = getStart ( g )
+
+vertices1 = filter ( \v -> ( v ) in s ) ( map ( \edge -> ( ( edge )[ 0 ] )[ 0 ] ) ( getEdges ( res1 ) ) )
+vertices2 = filter ( \v -> ( v ) in s ) ( map ( \edge -> ( ( edge )[ 0 ] )[ 0 ] ) ( getEdges ( res2 ) ) )
+
+vertices = ( vertices1 & vertices2 )
+
+print vertices

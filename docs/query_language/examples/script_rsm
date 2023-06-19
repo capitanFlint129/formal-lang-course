@@ -1,0 +1,7 @@
+a = ( smb "a" | a )
+b = ( smb "b" | b )
+fa = smb "c"
+c = ( a | b )
+e = ( a ++ b )
+f = ( fa | b )
+h = ( fa ++ b )

@@ -1,5 +1,10 @@
 import cfpq_data
 import networkx as nx
+import pydot
+
+
+def load_graph_from_dot(path: str) -> nx.Graph:
+    return nx.nx_pydot.from_pydot(pydot.graph_from_dot_file(path)[0])
 
 
 def get_graph_by_name(name: str) -> nx.Graph:

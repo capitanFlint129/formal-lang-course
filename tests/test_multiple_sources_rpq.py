@@ -1,7 +1,7 @@
 from pyformlang.regular_expression import Regex
 import pytest
 
-from project import automata, grapth_utils
+from project import automata, graph_utils
 from project.rpq import multiple_sources
 from project.rpq.all_pairs import enumerate_states
 from project.boolean_decomposition import *
@@ -25,7 +25,7 @@ from project.boolean_decomposition import *
 def test_multiple_sources_reachability_with_regular_constraints(
     for_each_vertex, query, expected
 ):
-    graph = grapth_utils.create_two_cycles_graph(
+    graph = graph_utils.create_two_cycles_graph(
         3,
         3,
         (
@@ -74,7 +74,7 @@ def test_multiple_sources_reachability_with_regular_constraints(
     ],
 )
 def test_multiple_sources_regular_query_for_graph(for_each_vertex, query, expected):
-    graph = grapth_utils.create_two_cycles_graph(
+    graph = graph_utils.create_two_cycles_graph(
         3,
         3,
         (

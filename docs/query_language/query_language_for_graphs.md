@@ -50,7 +50,7 @@ stmt -> name ' = ' expr | 'print ' expr
 
 name -> literal | literal name
 
-string -> '/' | '.' | literal | string string
+string -> '/' | '.' | ' ' | ';' | literal | string string;
 
 literal -> char | digit | '_'
 
@@ -63,11 +63,13 @@ integer -> digit | digit integer | '-' integer
 bool -> 'True' | 'False'
 
 val ->
-    '"' string '"'
+  stringVal
   | integer
   | bool
   | list
   | set
+
+stringVal -> '"' string '"' | '""'
 
 expr ->
     name
@@ -86,21 +88,25 @@ expr ->
   | 'getEdges ( ' expr ' )'
   | 'map ( ' lambda ' ) ( ' expr ' )'
   | 'filter ( ' lambda ' ) ( ' expr ' )'
-  | 'load ' string
-  | expr ' & ' expr
-  | expr ' ++ ' expr
-  | expr ' | ' expr
-  | '*' expr
+  | 'load ' stringVal
+  | '( ' expr ' & ' expr ' )'
+  | '( ' expr ' ++ ' expr ' )'
+  | '( ' expr ' | ' expr ' )'
+  | '*( ' expr ' )'
   | 'smb ' expr
   | '( ' expr ' )'
-  | expr ' in ' expr
-  | expr '[ ' integer ' ]'
-
-list -> '[ ' elements ' ]'
-
-set -> '{ ' elements ' }'
+  | '( ' expr ' ) in ' expr
+  | '( ' expr ' )' '[ ' integer ' ]'
 
 elements -> expr | expr ', ' elements |  integer '..' integer
+
+list -> '[]' | '[ ' elements ' ]' | '[ ' range ' ]'
+
+set -> '{}' | '{ ' elements ' }' | '{ ' range ' }'
+
+range -> integer '..' integer
+
+elements -> expr | expr ', ' elements
 
 lambdaArgs -> name | name ', ' lambdaArgs
 
@@ -115,7 +121,7 @@ lambda -> '\' lambdaArgs ' -> ' expr
 Загрузка графа из файла.
 
 ```
-g_ = load /home/user/wine.dot
+g_ = load "/home/user/wine.dot"
 ```
 
 Создаем новый граф. Из `g_` берутся все вершины и устанавливаются в качестве финальных,
@@ -128,16 +134,16 @@ g = setStart ( setFinal ( g_ ) ( getVertices ( g_ ) ) ) ( { 0..100 } )
 Создаем запросы с помощью операций объединения, замыкания и конкатенации.
 
 ```
-l1 = "l1" | "l2"
+l1 = ( smb "l1" | smb "l2" )
 
-q1 = *( "type" | l1 )
-q2 = "sub_class_of" ++ l1
+q1 = *( ( smb "type" | l1 ) )
+q2 = ( smb "sub_class_of" ++ l1 )
 ```
 
 Строим пересечение языков запросов и графа, а затем печатаем результат первого пересечения.
 ```
-res1 = g & q1
-res2 = g & q2
+res1 = ( g & q1 )
+res2 = ( g & q2 )
 
 print res1
 ```
@@ -152,13 +158,13 @@ s = getStart ( g )
 соответсвующую графу. После чего с помощью filter оставляем только те вершины,
 которые являются стартовыми вершинами графа.
 ```
-vertices1 = filter ( \v -> v in s ) ( map ( \edge -> edge[ 0 ][ 0 ] ) ( getEdges ( res1 ) ) )
-vertices2 = filter ( \v -> v in s ) ( map ( \edge -> edge[ 0 ][ 0 ] ) ( getEdges ( res2 ) ) )
+vertices1 = filter ( \v -> ( v ) in s ) ( map ( \edge -> ( ( edge )[ 0 ] )[ 0 ] ) ( getEdges ( res1 ) ) )
+vertices2 = filter ( \v -> ( v ) in s ) ( map ( \edge -> ( ( edge )[ 0 ] )[ 0 ] ) ( getEdges ( res2 ) ) )
 ```
 
 Строим пересечение полученных множеств вершин и печатаем их.
 ```
-vertices = vertices1 & vertices2
+vertices = ( vertices1 & vertices2 )
 
 print vertices
 ```
